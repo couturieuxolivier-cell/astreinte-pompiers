@@ -432,27 +432,170 @@ function onGlobale() {
 function renderCr() {
   var jours = WK[CUR.wk];
   var saved = (DB.dispos[CUR.agent&&CUR.agent.id]||{}).creneaux||{};
+  var savedH = (DB.dispos[CUR.agent&&CUR.agent.id]||{}).heures||{};
   var list = document.getElementById("crList");
   list.innerHTML = "";
   jours.forEach(function(j) {
-    var c = CR[j]; var checked = saved[j]!==false;
-    var div = document.createElement("div"); div.className="cri";
-    div.innerHTML='<div class="crd '+c.c+'">'+c.l.substring(0,3).toUpperCase()+'</div>'+
-      '<div class="crinf"><div class="crl">'+c.l+'</div><div class="crh">'+c.h+'</div></div>'+
-      '<label class="tgl"><input type="checkbox" class="ct" data-j="'+j+'" '+(checked?"checked":"")+'>'+
-      '<span class="tgl-s"></span></label>';
-    list.appendChild(div);
+    var c = CR[j];
+    var checked = saved[j] !== false;
+    var parts = c.h.split("-");
+    var defaultStart = parts[0].trim().replace("h",":");
+    var defaultEnd = parts[1].trim().replace("h",":");
+    if(defaultStart.indexOf(":") === 1) defaultStart = "0" + defaultStart;
+    if(defaultEnd.indexOf(":") === 1) defaultEnd = "0" + defaultEnd;
+    if(defaultStart.slice(-1) === ":") defaultStart += "00";
+    if(defaultEnd.slice(-1) === ":") defaultEnd += "00";
+    var savedStart = (savedH[j] && savedH[j].debut) || defaultStart;
+    var savedEnd = (savedH[j] && savedH[j].fin) || defaultEnd;
+    var wrapper = document.createElement("div");
+    wrapper.style.cssText = "border-bottom:1px solid #333;padding-bottom:10px;margin-bottom:2px";
+    var row = document.createElement("div");
+    row.className = "cri";
+    row.style.cssText = "border-bottom:none;padding-bottom:4px";
+    var dayDiv = document.createElement("div");
+    dayDiv.className = "crd " + c.c;
+    dayDiv.textContent = c.l.substring(0,3).toUpperCase();
+    var infoDiv = document.createElement("div");
+    infoDiv.className = "crinf";
+    infoDiv.innerHTML = '<div class="crl">' + c.l + '</div><div class="crh">' + c.h + '</div>';
+    var tglLabel = document.createElement("label");
+    tglLabel.className = "tgl";
+    var chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.className = "ct";
+    chk.dataset.j = j;
+    if(checked) chk.checked = true;
+    chk.addEventListener("change", function() {
+      var hDiv = document.getElementById("heures_" + this.dataset.j);
+      var rDiv = document.getElementById("rem_" + this.dataset.j);
+      if(hDiv) hDiv.style.display = this.checked ? "flex" : "none";
+      if(rDiv) rDiv.style.display = this.checked ? "flex" : "none";
+    });
+    var tglSpan = document.createElement("span");
+    tglSpan.className = "tgl-s";
+    tglLabel.appendChild(chk);
+    tglLabel.appendChild(tglSpan);
+    row.appendChild(dayDiv);
+    row.appendChild(infoDiv);
+    row.appendChild(tglLabel);
+    wrapper.appendChild(row);
+    var heuresDiv = document.createElement("div");
+    heuresDiv.id = "heures_" + j;
+    heuresDiv.style.cssText = "display:" + (checked ? "flex" : "none") + ";align-items:center;gap:8px;padding:4px 0 2px 58px;flex-wrap:wrap";
+    var deLabel = document.createElement("span");
+    deLabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    deLabel.textContent = "De";
+    var startInput = document.createElement("input");
+    startInput.type = "time";
+    startInput.className = "ch-debut";
+    startInput.dataset.j = j;
+    startInput.value = savedStart;
+    startInput.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;width:90px;font-family:inherit";
+    var aLabel = document.createElement("span");
+    aLabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    aLabel.textContent = "a";
+    var endInput = document.createElement("input");
+    endInput.type = "time";
+    endInput.className = "ch-fin";
+    endInput.dataset.j = j;
+    endInput.value = savedEnd;
+    endInput.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;width:90px;font-family:inherit";
+    heuresDiv.appendChild(deLabel);
+    heuresDiv.appendChild(startInput);
+    heuresDiv.appendChild(aLabel);
+    heuresDiv.appendChild(endInput);
+    // Ligne remplacant
+    var remDiv = document.createElement("div");
+    remDiv.id = "rem_" + j;
+    remDiv.style.cssText = "display:" + (checked ? "flex" : "none") + ";align-items:center;gap:8px;padding:4px 0 6px 58px;flex-wrap:wrap";
+    var remLabel = document.createElement("span");
+    remLabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    remLabel.textContent = "Remplacant :";
+    var remSelect = document.createElement("select");
+    remSelect.className = "ch-rem";
+    remSelect.dataset.j = j;
+    remSelect.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;font-family:inherit;flex:1;max-width:180px";
+    var defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "-- Aucun --";
+    remSelect.appendChild(defaultOpt);
+    var allAgents = [];
+    ["1","2","3","4"].forEach(function(eq) {
+      (DB.agents[eq]||[]).forEach(function(a) {
+        if(!CUR.agent || a.id !== CUR.agent.id) allAgents.push(a);
+      });
+    });
+    allAgents.forEach(function(a) {
+      var opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = a.nom;
+      if(savedH[j] && savedH[j].remplacant === a.id) opt.selected = true;
+      remSelect.appendChild(opt);
+    });
+    var remDeLabel = document.createElement("span");
+    remDeLabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    remDeLabel.textContent = "de";
+    var remStart = document.createElement("input");
+    remStart.type = "time";
+    remStart.className = "ch-rem-debut";
+    remStart.dataset.j = j;
+    remStart.value = (savedH[j] && savedH[j].remDebut) || "";
+    remStart.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;width:90px;font-family:inherit";
+    var remALabel = document.createElement("span");
+    remALabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    remALabel.textContent = "a";
+    var remEnd = document.createElement("input");
+    remEnd.type = "time";
+    remEnd.className = "ch-rem-fin";
+    remEnd.dataset.j = j;
+    remEnd.value = (savedH[j] && savedH[j].remFin) || "";
+    remEnd.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;width:90px;font-family:inherit";
+    remDiv.appendChild(remLabel);
+    remDiv.appendChild(remSelect);
+    remDiv.appendChild(remDeLabel);
+    remDiv.appendChild(remStart);
+    remDiv.appendChild(remALabel);
+    remDiv.appendChild(remEnd);
+    wrapper.appendChild(heuresDiv);
+    wrapper.appendChild(remDiv);
+    list.appendChild(wrapper);
   });
+}
+
+function toggleHeures(j, checked) {
+  var el = document.getElementById("heures_"+j);
+  if(el) el.style.display = checked ? "flex" : "none";
 }
 
 function submitDispo() {
   if (!CUR.agent) { toast("Sélectionner un agent"); return; }
   var crs={};
   document.querySelectorAll(".ct").forEach(function(t){crs[t.dataset.j]=t.checked;});
+  var heures={};
+  document.querySelectorAll(".ch-debut").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].debut=t.value;
+  });
+  document.querySelectorAll(".ch-fin").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].fin=t.value;
+  });
+  document.querySelectorAll(".ch-rem").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].remplacant=t.value;
+  });
+  document.querySelectorAll(".ch-rem-debut").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].remDebut=t.value;
+  });
+  document.querySelectorAll(".ch-rem-fin").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].remFin=t.value;
+  });
   var data={agentId:CUR.agent.id,nom:CUR.agent.nom,grade:CUR.agent.grade,
     fonction:CUR.agent.fonction,equipe:CUR.eq,
     dispoGlobale:document.getElementById("globale").checked,
-    wkType:CUR.wk,creneaux:crs,timestamp:new Date().toISOString()};
+    wkType:CUR.wk,creneaux:crs,heures:heures,timestamp:new Date().toISOString()};
   DB.dispos[CUR.agent.id]=data;
   sbSet("dispos",DB.dispos).then(function(){
     var m=document.getElementById("okMsg"); m.style.display="block";
@@ -518,8 +661,22 @@ function renderChef() {
       var c=CR[j]; var isDispo=disp.indexOf(j)>-1; var isSel=!!agSel[j];
       var row=document.createElement("div");
       row.className="ccr"+(isSel?" sel":"")+(isDispo?"":" na");
+      var agHeures=(d.heures&&d.heures[j])||{};
+      var heuresStr=agHeures.debut&&agHeures.fin?agHeures.debut+' - '+agHeures.fin:c.h;
+      var remInfo="";
+      if(agHeures.remplacant){
+        var remAg=null;
+        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(a){if(a.id===agHeures.remplacant)remAg=a;});});
+        if(remAg){
+          var remValidated=(DB.sel[agent.id]||{})[j+"_rem"];
+          remInfo='<div style="font-size:10px;color:#F39C12;margin-top:3px;display:flex;align-items:center;gap:6px">'+
+            '🔄 '+remAg.nom+(agHeures.remDebut&&agHeures.remFin?' ('+agHeures.remDebut+'-'+agHeures.remFin+')':'')+
+            '<button class="vrem-btn" data-aid="'+agent.id+'" data-j="'+j+'" style="background:'+(remValidated?'#27AE60':'#444')+';border:none;color:white;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;font-family:inherit">'+(remValidated?'Valide':'Valider')+'</button>'+
+            '</div>';
+        }
+      }
       row.innerHTML='<div class="ccrl"><div class="ccrd '+c.c+'" style="color:'+CLRS[c.c]+'">'+c.l.substring(0,3).toUpperCase()+'</div>'+
-        '<div><div class="ccri">'+c.l+'</div><div class="ccrh">'+c.h+'</div></div></div>'+
+        '<div><div class="ccri">'+c.l+'</div><div class="ccrh">'+heuresStr+'</div>'+remInfo+'</div></div>'+
         '<div>'+(isSel?"✅":isDispo?"⬜":"🚫")+'</div>';
       if (isDispo){
         (function(aid,jour){row.onclick=function(){toggleCr(aid,jour);};})(ag.id,j);
@@ -589,7 +746,21 @@ function renderPlan(){
     var c=CR[j]; var att=ags.filter(function(a){return (DB.sel[a.id]||{})[j];});
     var div=document.createElement("div"); div.className="pcr "+c.c;
     var html='<div class="pt">'+c.l+'</div><div class="ph">'+c.h+'</div>';
-    if(att.length>0){att.forEach(function(a){html+='<div class="pa">🧑‍🚒 <div><div>'+a.nom+'</div><div class="pag">'+a.grade+'</div></div></div>';});}
+    if(att.length>0){att.forEach(function(a){
+      var dA=DB.dispos[a.id]||{};
+      var hA=(dA.heures&&dA.heures[j])||{};
+      var hStr=hA.debut&&hA.fin?'<span style="color:#1ABC9C;font-size:10px;margin-left:6px">'+hA.debut+'-'+hA.fin+'</span>':'';
+      html+='<div class="pa">🧑‍🚒 <div style="flex:1"><div style="display:flex;align-items:center">'+a.nom+hStr+'</div><div class="pag">'+a.grade+'</div></div></div>';
+      // Afficher remplacant validé
+      if(hA.remplacant && (DB.sel[a.id]||{})[j+"_rem"]){
+        var remAg=null;
+        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
+        if(remAg){
+          var rStr=hA.remDebut&&hA.remFin?'<span style="color:#1ABC9C;font-size:10px;margin-left:6px">'+hA.remDebut+'-'+hA.remFin+'</span>':'';
+          html+='<div class="pa" style="background:rgba(243,156,18,0.1);border-left:2px solid #F39C12">🔄 <div style="flex:1"><div style="display:flex;align-items:center">'+remAg.nom+rStr+'</div><div class="pag" style="color:#F39C12">Remplacant validé</div></div></div>';
+        }
+      }
+    });}
     else{html+='<div class="ec">Aucun agent attribué</div>';}
     div.innerHTML=html; grid.appendChild(div);
   });
@@ -938,6 +1109,15 @@ function renderStats(){
     html+='</div>';
     rappelGrid.innerHTML=html;
   }
+}
+
+function validerRem(agentId, j) {
+  if(!DB.sel[agentId]) DB.sel[agentId]={};
+  DB.sel[agentId][j+"_rem"] = !DB.sel[agentId][j+"_rem"];
+  sbSet("selections", DB.sel).then(function(){
+    toast(DB.sel[agentId][j+"_rem"] ? "✅ Remplacant validé" : "❌ Validation retirée");
+    renderChef();
+  });
 }
 
 function toast(msg){
