@@ -111,6 +111,11 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
 .mbox{background:var(--anth);border-radius:16px;padding:20px;width:88%;max-width:340px;}
 .mt{font-family:'Bebas Neue',sans-serif;font-size:22px;margin-bottom:14px;}
 .spin{text-align:center;padding:30px;color:var(--gris-s);}
+.status-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px;}
+.status-actif{background:rgba(39,174,96,0.2);color:#2ECC71;border:1px solid #27AE60;}
+.status-inapte{background:rgba(231,76,60,0.2);color:#E74C3C;border:1px solid #C0392B;}
+.status-conge{background:rgba(243,156,18,0.2);color:#F39C12;border:1px solid #F39C12;}
+.status-autre{background:rgba(127,140,141,0.2);color:#BDC3C7;border:1px solid #7F8C8D;}
 .tooltip-wrap{position:relative;display:inline-block;}
 .tooltip-box{display:none;position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:#1A1A1A;color:var(--blanc);border:1px solid #444;border-radius:8px;padding:8px 12px;font-size:11px;white-space:nowrap;z-index:50;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,0.4);}
 .tooltip-box::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#444;}
@@ -243,6 +248,30 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
   </div>
 </div>
 
+<!-- STATUS MODAL -->
+<div class="modal" id="statusModal">
+  <div class="mbox">
+    <div class="mt">Statut de l'agent</div>
+    <div id="statusAgentName" style="font-weight:600;color:var(--or);margin-bottom:14px"></div>
+    <input type="hidden" id="statusAgentId">
+    <input type="hidden" id="statusAgentEq">
+    <label class="lbl">Statut</label>
+    <select id="statusSelect" style="margin-bottom:12px">
+      <option value="actif">✅ Actif</option>
+      <option value="inapte">🚫 Inapte médical</option>
+      <option value="conge">🏖️ Congé</option>
+      <option value="suspension">⛔ Suspension</option>
+      <option value="autre">⚠️ Autre indisponibilité</option>
+    </select>
+    <label class="lbl">Date de retour prévue (optionnel)</label>
+    <input type="date" id="statusRetour" style="margin-bottom:14px;color-scheme:dark">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-r" style="margin-bottom:0" onclick="saveStatus()">Sauvegarder</button>
+      <button class="btn btn-rv" style="margin-bottom:0" onclick="document.getElementById('statusModal').classList.remove('on')">Annuler</button>
+    </div>
+  </div>
+</div>
+
 <!-- QR CODE -->
 <div class="vw" id="v-qr">
   <div class="card" style="text-align:center">
@@ -274,10 +303,29 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
       <button class="atab on" onclick="admTab('agents',this)">👥 Agents</button>
       <button class="atab" onclick="admTab('codes',this)">🔑 Codes</button>
       <button class="atab" onclick="admTab('historique',this)">📚 Historique</button>
+      <button class="atab" onclick="admTab('params',this)">⚙️ Paramètres</button>
     </div>
     <div id="tabAgents"><div id="eqList"></div></div>
     <div id="tabCodes" style="display:none">
       <div class="card"><label class="lbl">Codes d'accès</label><div id="codeList"></div></div>
+    </div>
+    <div id="tabParams" style="display:none">
+      <div class="card">
+        <label class="lbl">Qualifications personnalisées</label>
+        <div id="qualList" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="newQual" placeholder="Nouvelle qualification" style="margin-bottom:0;flex:1">
+          <button class="btn-sm" style="background:var(--vert);color:white;white-space:nowrap" onclick="addQual()">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="card">
+        <label class="lbl">Fonctions principales</label>
+        <div id="fonctionList" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="newFonction" placeholder="Nouvelle fonction" style="margin-bottom:0;flex:1">
+          <button class="btn-sm" style="background:var(--vert);color:white;white-space:nowrap" onclick="addFonction()">+ Ajouter</button>
+        </div>
+      </div>
     </div>
     <div id="tabHistorique" style="display:none">
       <div class="card">
@@ -386,7 +434,10 @@ var WK = {
 var CLRS = {ven:"#9B59B6",sam:"#E74C3C",dim:"#F39C12",lun:"#1ABC9C"};
 
 // Init
-loadAll(function() { toast("Connecté ✅"); });
+loadAll(function() {
+  getParams(function(){});
+  toast("Connecté ✅");
+});
 
 // Polling pour chef/planning
 var pollT = null;
@@ -909,7 +960,9 @@ function admTab(tab,btn){
   document.getElementById("tabAgents").style.display=tab==="agents"?"":"none";
   document.getElementById("tabCodes").style.display=tab==="codes"?"":"none";
   document.getElementById("tabHistorique").style.display=tab==="historique"?"":"none";
+  document.getElementById("tabParams").style.display=tab==="params"?"":"none";
   if(tab==="historique") renderHistorique();
+  if(tab==="params") renderParams();
 }
 
 function renderAdmAgs() {
@@ -930,17 +983,25 @@ function renderAdmAgs() {
       var row = document.createElement("div"); row.className = "agr"; row.style.flexDirection="column";
       var quals = a.qualifications && a.qualifications.length ? a.qualifications : [];
       var qualBadges = quals.length ? '<div style="margin-top:3px">'+quals.map(function(q){return'<span class="qual-badge">'+q+'</span>';}).join("")+'</div>' : '';
+      var statusLbl = getStatusLabel(a.status);
+      var statusCls = getStatusCls(a.status);
+      var statusBadge = '<span class="status-badge '+statusCls+'">'+statusLbl+'</span>';
+      var isInactif = a.status && a.status !== "actif";
       var mainDiv = document.createElement("div"); mainDiv.style="display:flex;align-items:center;justify-content:space-between;width:100%";
-      mainDiv.innerHTML = '<div class="agri"><div class="agrn">'+a.nom+'</div><div class="agrg">'+a.grade+' - '+a.fonction+'</div>'+qualBadges+'</div>'+
-        '<div class="agra">'+
-        '<button class="mvb" data-id="'+a.id+'" data-eq="'+eq+'" onclick="openEditAgent(this.dataset.id,this.dataset.eq)">Modifier</button>'+
+      if(isInactif) mainDiv.style.opacity="0.6";
+      mainDiv.innerHTML = '<div class="agri"><div class="agrn">'+a.nom+statusBadge+'</div>'+
+        '<div class="agrg">'+a.grade+' - '+a.fonction+(a.dateRetour?' · Retour: '+a.dateRetour:'')+' </div>'+qualBadges+'</div>'+
+        '<div class="agra" style="flex-wrap:wrap;justify-content:flex-end;gap:4px">'+
+        '<button class="mvb" data-id="'+a.id+'" data-eq="'+eq+'" onclick="openStatusModal(this.dataset.id,this.dataset.eq)">Statut</button>'+
+        '<button class="mvb" data-id="'+a.id+'" data-eq="'+eq+'" onclick="openEditAgent(this.dataset.id,this.dataset.eq)">Quals</button>'+
         '<button class="mvb" data-id="'+a.id+'" data-eq="'+eq+'" data-nom="'+a.nom+'" onclick="openMove(this.dataset.id,this.dataset.eq,this.dataset.nom)">Deplacer</button>'+
         '<button class="dlb" data-id="'+a.id+'" data-eq="'+eq+'" onclick="delAg(this.dataset.id,this.dataset.eq)">Suppr.</button>'+
         '</div>';
       row.appendChild(mainDiv);
       // Formulaire modification (caché)
       var editDiv = document.createElement("div"); editDiv.id="edit_"+a.id; editDiv.style="display:none;width:100%;margin-top:10px;background:var(--noir);border-radius:8px;padding:12px";
-      var qualChecks = QUALS.map(function(q){
+      var dynQuals = (DB.params && DB.params.qualifications) ? DB.params.qualifications : DEFAULT_QUALS;
+      var qualChecks = dynQuals.map(function(q){
         var checked = quals.indexOf(q)>-1 ? "checked" : "";
         return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;margin:3px 6px 3px 0"><input type="checkbox" class="eq_'+a.id+'" value="'+q+'" '+checked+'> '+q+'</label>';
       }).join("");
@@ -959,7 +1020,8 @@ function renderAdmAgs() {
     addBtn.onclick = function(){ document.getElementById("af_"+eq).style.display="block"; };
     sec.appendChild(addBtn);
     var formDiv = document.createElement("div"); formDiv.className="af"; formDiv.id="af_"+eq;
-    var qualChecksNew = QUALS.map(function(q){
+    var dynQuals = (DB.params && DB.params.qualifications) ? DB.params.qualifications : DEFAULT_QUALS;
+    var qualChecksNew = dynQuals.map(function(q){
       return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;margin:3px 6px 3px 0"><input type="checkbox" class="nq nq_new_'+eq+'" value="'+q+'"> '+q+'</label>';
     }).join("");
     formDiv.innerHTML = '<label class="lbl" style="margin-bottom:8px">Nouveau membre - Equipe '+eq+'</label>'+
@@ -970,8 +1032,8 @@ function renderAdmAgs() {
       '<option>Sergent Chef</option><option>Sergent</option><option>Caporal Chef</option>'+
       '<option>Caporal</option><option>Sapeur 1ere Cl.</option><option>Sapeur</option></select>'+
       '<select id="nf_'+eq+'"><option value="">Fonction principale</option>'+
-      '<option>Chef de garde</option><option>Chef agres VSAV</option>'+
-      '<option>Conducteur VSAV</option><option>Equipier</option><option>Autre</option></select>'+
+      ((DB.params&&DB.params.fonctions)?DB.params.fonctions:DEFAULT_FONCTIONS).map(function(f){return'<option>'+f+'</option>';}).join("")+
+      '</select>'+
       '</div>'+
       '<div class="lbl" style="margin-top:8px;margin-bottom:6px">Qualifications</div>'+
       '<div style="display:flex;flex-wrap:wrap;margin-bottom:10px">'+qualChecksNew+'</div>'+
@@ -1459,6 +1521,138 @@ function renderCompteurInStats() {
     });
     html += '</div>';
     grid.innerHTML += html;
+  });
+}
+
+// ===== PARAMÈTRES =====
+var DEFAULT_QUALS = ["PL","VSAV","Chef agres","Chef garde","Prompt secours","Secouriste","FDF","GRIMP","NRBC"];
+var DEFAULT_FONCTIONS = ["Chef de garde","Chef agres VSAV","Conducteur VSAV","Equipier","Autre"];
+
+function getParams(cb) {
+  sbGet("params").then(function(p) {
+    if (!p) {
+      var def = {qualifications: DEFAULT_QUALS, fonctions: DEFAULT_FONCTIONS};
+      sbSet("params", def).then(function(){ DB.params = def; if(cb) cb(def); });
+    } else { DB.params = p; if(cb) cb(p); }
+  });
+}
+
+function renderParams() {
+  getParams(function(p) {
+    // Qualifications
+    var qList = document.getElementById("qualList");
+    if(qList) {
+      qList.innerHTML = "";
+      (p.qualifications||[]).forEach(function(q, i) {
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:6px";
+        row.innerHTML = '<span class="qual-badge" style="flex:1">'+q+'</span>'+
+          '<button class="btn-sm" style="background:rgba(243,156,18,0.15);color:var(--or);border:1px solid var(--or)" data-i="'+i+'" data-q="'+q+'" onclick="editQual(parseInt(this.dataset.i),this.dataset.q)">Modifier</button>'+
+          '<button class="btn-sm" style="background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v)" data-i="'+i+'" onclick="delQual(parseInt(this.dataset.i))">Suppr.</button>';
+        qList.appendChild(row);
+      });
+    }
+    // Fonctions
+    var fList = document.getElementById("fonctionList");
+    if(fList) {
+      fList.innerHTML = "";
+      (p.fonctions||[]).forEach(function(f, i) {
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:6px";
+        row.innerHTML = '<span style="flex:1;font-size:13px;font-weight:500">'+f+'</span>'+
+          '<button class="btn-sm" style="background:rgba(243,156,18,0.15);color:var(--or);border:1px solid var(--or)" data-i="'+i+'" data-f="'+f+'" onclick="editFonction(parseInt(this.dataset.i),this.dataset.f)">Modifier</button>'+
+          '<button class="btn-sm" style="background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v)" data-i="'+i+'" onclick="delFonction(parseInt(this.dataset.i))">Suppr.</button>';
+        fList.appendChild(row);
+      });
+    }
+  });
+}
+
+function addQual() {
+  var val = document.getElementById("newQual").value.trim();
+  if(!val) { toast("Entrer une qualification"); return; }
+  var p = DB.params || {qualifications:DEFAULT_QUALS.slice(),fonctions:DEFAULT_FONCTIONS.slice()};
+  if(!p.qualifications) p.qualifications = DEFAULT_QUALS.slice();
+  p.qualifications.push(val);
+  sbSet("params", p).then(function(){ DB.params=p; document.getElementById("newQual").value=""; renderParams(); toast("Qualification ajoutée !"); });
+}
+
+function editQual(i, oldVal) {
+  var newVal = prompt("Modifier la qualification :", oldVal);
+  if(!newVal || newVal === oldVal) return;
+  var p = DB.params;
+  p.qualifications[i] = newVal.trim();
+  sbSet("params", p).then(function(){ DB.params=p; renderParams(); toast("Qualification modifiée !"); });
+}
+
+function delQual(i) {
+  if(!confirm("Supprimer cette qualification ?")) return;
+  var p = DB.params;
+  p.qualifications.splice(i, 1);
+  sbSet("params", p).then(function(){ DB.params=p; renderParams(); toast("Qualification supprimée"); });
+}
+
+function addFonction() {
+  var val = document.getElementById("newFonction").value.trim();
+  if(!val) { toast("Entrer une fonction"); return; }
+  var p = DB.params || {qualifications:DEFAULT_QUALS.slice(),fonctions:DEFAULT_FONCTIONS.slice()};
+  if(!p.fonctions) p.fonctions = DEFAULT_FONCTIONS.slice();
+  p.fonctions.push(val);
+  sbSet("params", p).then(function(){ DB.params=p; document.getElementById("newFonction").value=""; renderParams(); toast("Fonction ajoutée !"); });
+}
+
+function editFonction(i, oldVal) {
+  var newVal = prompt("Modifier la fonction :", oldVal);
+  if(!newVal || newVal === oldVal) return;
+  var p = DB.params;
+  p.fonctions[i] = newVal.trim();
+  sbSet("params", p).then(function(){ DB.params=p; renderParams(); toast("Fonction modifiée !"); });
+}
+
+function delFonction(i) {
+  if(!confirm("Supprimer cette fonction ?")) return;
+  var p = DB.params;
+  p.fonctions.splice(i, 1);
+  sbSet("params", p).then(function(){ DB.params=p; renderParams(); toast("Fonction supprimée"); });
+}
+
+// ===== STATUT AGENT =====
+function getStatusLabel(status) {
+  var labels = {actif:"Actif",inapte:"Inapte médical",conge:"Congé",suspension:"Suspension",autre:"Indisponible"};
+  return labels[status||"actif"] || "Actif";
+}
+
+function getStatusCls(status) {
+  var cls = {actif:"status-actif",inapte:"status-inapte",conge:"status-conge",suspension:"status-inapte",autre:"status-autre"};
+  return cls[status||"actif"] || "status-actif";
+}
+
+function openStatusModal(agentId, eq) {
+  var ag = null;
+  (DB.agents[eq]||[]).forEach(function(a){ if(a.id===agentId) ag=a; });
+  if(!ag) return;
+  var cur = ag.status || "actif";
+  var modal = document.getElementById("statusModal");
+  document.getElementById("statusAgentName").textContent = ag.nom;
+  document.getElementById("statusAgentId").value = agentId;
+  document.getElementById("statusAgentEq").value = eq;
+  document.getElementById("statusSelect").value = cur;
+  document.getElementById("statusRetour").value = ag.dateRetour || "";
+  modal.classList.add("on");
+}
+
+function saveStatus() {
+  var agentId = document.getElementById("statusAgentId").value;
+  var eq = document.getElementById("statusAgentEq").value;
+  var status = document.getElementById("statusSelect").value;
+  var dateRetour = document.getElementById("statusRetour").value;
+  var agents = JSON.parse(JSON.stringify(DB.agents[eq]||[]));
+  agents.forEach(function(a){ if(a.id===agentId){ a.status=status; a.dateRetour=dateRetour; } });
+  sbSet("agents/"+eq, agents).then(function(){
+    DB.agents[eq]=agents;
+    document.getElementById("statusModal").classList.remove("on");
+    renderAdmAgs();
+    toast("Statut mis à jour !");
   });
 }
 
