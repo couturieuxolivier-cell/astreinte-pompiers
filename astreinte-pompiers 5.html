@@ -671,7 +671,7 @@ function renderChef() {
           var remValidated=(DB.sel[agent.id]||{})[j+"_rem"];
           remInfo='<div style="font-size:10px;color:#F39C12;margin-top:3px;display:flex;align-items:center;gap:6px">'+
             '🔄 '+remAg.nom+(agHeures.remDebut&&agHeures.remFin?' ('+agHeures.remDebut+'-'+agHeures.remFin+')':'')+
-            '<button class="vrem-btn" data-aid="'+agent.id+'" data-j="'+j+'" style="background:'+(remValidated?'#27AE60':'#444')+';border:none;color:white;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;font-family:inherit">'+(remValidated?'Valide':'Valider')+'</button>'+
+            '<button class="vrem-btn" data-aid="'+ag.id+'" data-j="'+j+'" style="background:'+(remValidated?'#27AE60':'#444')+';border:none;color:white;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;font-family:inherit">'+(remValidated?'Valide':'Valider')+'</button>'+
             '</div>';
         }
       }
@@ -684,6 +684,13 @@ function renderChef() {
       crdiv.appendChild(row);
     });
     card.appendChild(crdiv); cont.appendChild(card);
+  });
+  // Delegation pour boutons remplacant
+  cont.querySelectorAll(".vrem-btn").forEach(function(btn){
+    btn.addEventListener("click", function(e){
+      e.stopPropagation();
+      validerRem(this.getAttribute("data-aid"), this.getAttribute("data-j"));
+    });
   });
 }
 
