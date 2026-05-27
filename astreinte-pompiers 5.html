@@ -111,6 +111,11 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
 .mbox{background:var(--anth);border-radius:16px;padding:20px;width:88%;max-width:340px;}
 .mt{font-family:'Bebas Neue',sans-serif;font-size:22px;margin-bottom:14px;}
 .spin{text-align:center;padding:30px;color:var(--gris-s);}
+.tooltip-wrap{position:relative;display:inline-block;}
+.tooltip-box{display:none;position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:#1A1A1A;color:var(--blanc);border:1px solid #444;border-radius:8px;padding:8px 12px;font-size:11px;white-space:nowrap;z-index:50;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,0.4);}
+.tooltip-box::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#444;}
+.tooltip-wrap:hover .tooltip-box,.tooltip-wrap.active .tooltip-box{display:block;}
+.qual-badge{display:inline-block;background:rgba(41,128,185,0.2);color:#5DADE2;border:1px solid #2980B9;border-radius:20px;padding:2px 7px;font-size:10px;margin:2px;}
 </style>
 </head>
 <body>
@@ -705,8 +710,14 @@ function renderChef() {
     // Header
     var hdr = document.createElement("div");
     hdr.className = "ach";
+    var qualTip="";
+    if(ag.qualifications&&ag.qualifications.length){
+      qualTip='<div class="tooltip-box"><div style="color:var(--or);font-weight:600;margin-bottom:4px">Qualifications</div>'+
+        ag.qualifications.map(function(q){return'<div style="font-size:11px">• '+q+'</div>';}).join("")+
+        '</div>';
+    }
     hdr.innerHTML =
-      '<div><div class="acn">'+ag.nom+'</div><div class="acg">'+ag.grade+(eq==="all"?" · Eq."+ag.equipe:"")+'</div></div>'+
+      '<div class="tooltip-wrap"><div class="acn">'+ag.nom+qualTip+'</div><div class="acg">'+ag.grade+(eq==="all"?" · Eq."+ag.equipe:"")+'</div></div>'+
       '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
       '<span class="db '+sc+'">'+sl+'</span>'+
       (nbSel > 0 ? '<span style="font-size:10px;color:var(--vert-c)">'+nbSel+' attribué'+(nbSel>1?"s":"")+'</span>' : '')+
@@ -829,7 +840,12 @@ function renderPlan(){
       var dA=DB.dispos[a.id]||{};
       var hA=(dA.heures&&dA.heures[j])||{};
       var hStr=hA.debut&&hA.fin?'<span style="color:#1ABC9C;font-size:10px;margin-left:6px">'+hA.debut+'-'+hA.fin+'</span>':'';
-      html+='<div class="pa">🧑‍🚒 <div style="flex:1"><div style="display:flex;align-items:center">'+a.nom+hStr+'</div><div class="pag">'+a.grade+'</div></div></div>';
+      var qTip="";
+      if(a.qualifications&&a.qualifications.length){
+        qTip='<div class="tooltip-box"><div style="color:var(--or);font-weight:600;margin-bottom:4px">Qualifications</div>'+
+          a.qualifications.map(function(q){return'<div style="font-size:11px">• '+q+'</div>';}).join("")+'</div>';
+      }
+      html+='<div class="pa">🧑‍🚒 <div style="flex:1"><div class="tooltip-wrap" style="display:inline">'+a.nom+qTip+hStr+'</div><div class="pag">'+a.grade+'</div></div></div>';
       // Afficher remplacant validé
       if(hA.remplacant && (DB.sel[a.id]||{})[j+"_rem"]){
         var remAg=null;
@@ -908,7 +924,8 @@ function renderAdmAgs(){
     if(!ags.length){var e=document.createElement("div");e.style="color:var(--gris-s);font-size:12px;padding:6px 0";e.textContent="Aucun agent";sec.appendChild(e);}
     ags.forEach(function(a){
       var row=document.createElement("div"); row.className="agr";
-      row.innerHTML='<div class="agri"><div class="agrn">'+a.nom+'</div><div class="agrg">'+a.grade+' - '+a.fonction+'</div></div>'+
+      var quals=a.qualifications&&a.qualifications.length?'<div style="margin-top:3px">'+a.qualifications.map(function(q){return'<span class="qual-badge">'+q+'</span>';}).join("")+'</div>':"";
+      row.innerHTML='<div class="agri"><div class="agrn">'+a.nom+'</div><div class="agrg">'+a.grade+' - '+a.fonction+'</div>'+quals+'</div>'+
         '<div class="agra"><button class="mvb" onclick="openMove(\''+a.id+'\',\''+eq+'\',\''+a.nom+'\')">Déplacer</button>'+
         '<button class="dlb" onclick="delAg(\''+a.id+'\',\''+eq+'\')">Suppr.</button></div>';
       sec.appendChild(row);
@@ -944,8 +961,10 @@ function addAg(eq){
   var grade=document.getElementById("ng_"+eq).value;
   var fn=document.getElementById("nf_"+eq).value;
   if(!nom||!grade||!fn){toast("Remplir tous les champs");return;}
+  var quals=[];
+  document.querySelectorAll(".nq_"+eq+":checked").forEach(function(c){quals.push(c.value);});
   if(!DB.agents[eq])DB.agents[eq]=[];
-  DB.agents[eq].push({id:"a"+Date.now(),nom:nom,grade:grade,fonction:fn});
+  DB.agents[eq].push({id:"a"+Date.now(),nom:nom,grade:grade,fonction:fn,qualifications:quals});
   sbSet("agents",DB.agents).then(function(){
     document.getElementById("nn_"+eq).value="";
     document.getElementById("af_"+eq).style.display="none";
@@ -1384,6 +1403,15 @@ function renderCompteurInStats() {
     grid.innerHTML += html;
   });
 }
+
+// Touch support pour tooltips mobile
+document.addEventListener("click", function(e){
+  var wrap = e.target.closest(".tooltip-wrap");
+  document.querySelectorAll(".tooltip-wrap.active").forEach(function(el){
+    if(el !== wrap) el.classList.remove("active");
+  });
+  if(wrap) wrap.classList.toggle("active");
+});
 
 function toast(msg){
   var t=document.getElementById("toast");
