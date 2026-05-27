@@ -912,49 +912,107 @@ function admTab(tab,btn){
   if(tab==="historique") renderHistorique();
 }
 
-function renderAdmAgs(){
+function renderAdmAgs() {
   if(!STATE.admin) return;
-  var cont=document.getElementById("eqList"); cont.innerHTML="";
-  ["1","2","3","4"].forEach(function(eq){
-    var ags=DB.agents[eq]||[];
-    var sec=document.createElement("div"); sec.className="eqs";
-    var hdr=document.createElement("div"); hdr.className="eqh";
-    hdr.innerHTML='<div class="eqt">Équipe '+eq+'</div><div style="font-size:11px;color:var(--gris-s)">'+ags.length+' agent'+(ags.length>1?"s":"")+'</div>';
+  var cont = document.getElementById("eqList");
+  cont.innerHTML = "";
+  var QUALS = ["PL","VSAV","Chef agres","Chef garde","Prompt secours","Secouriste","FDF","GRIMP","NRBC"];
+  ["1","2","3","4"].forEach(function(eq) {
+    var ags = DB.agents[eq] || [];
+    var sec = document.createElement("div"); sec.className = "eqs";
+    var hdr = document.createElement("div"); hdr.className = "eqh";
+    hdr.innerHTML = '<div class="eqt">Equipe '+eq+'</div><div style="font-size:11px;color:var(--gris-s)">'+ags.length+' agent'+(ags.length>1?"s":"")+'</div>';
     sec.appendChild(hdr);
-    if(!ags.length){var e=document.createElement("div");e.style="color:var(--gris-s);font-size:12px;padding:6px 0";e.textContent="Aucun agent";sec.appendChild(e);}
-    ags.forEach(function(a){
-      var row=document.createElement("div"); row.className="agr";
-      var quals=a.qualifications&&a.qualifications.length?'<div style="margin-top:3px">'+a.qualifications.map(function(q){return'<span class="qual-badge">'+q+'</span>';}).join("")+'</div>':"";
-      row.innerHTML='<div class="agri"><div class="agrn">'+a.nom+'</div><div class="agrg">'+a.grade+' - '+a.fonction+'</div>'+quals+'</div>'+
-        '<div class="agra"><button class="mvb" onclick="openMove(\''+a.id+'\',\''+eq+'\',\''+a.nom+'\')">Déplacer</button>'+
-        '<button class="dlb" onclick="delAg(\''+a.id+'\',\''+eq+'\')">Suppr.</button></div>';
+    if(!ags.length){
+      var e=document.createElement("div"); e.style="color:var(--gris-s);font-size:12px;padding:6px 0"; e.textContent="Aucun agent"; sec.appendChild(e);
+    }
+    ags.forEach(function(a) {
+      var row = document.createElement("div"); row.className = "agr"; row.style.flexDirection="column";
+      var quals = a.qualifications && a.qualifications.length ? a.qualifications : [];
+      var qualBadges = quals.length ? '<div style="margin-top:3px">'+quals.map(function(q){return'<span class="qual-badge">'+q+'</span>';}).join("")+'</div>' : '';
+      var mainDiv = document.createElement("div"); mainDiv.style="display:flex;align-items:center;justify-content:space-between;width:100%";
+      mainDiv.innerHTML = '<div class="agri"><div class="agrn">'+a.nom+'</div><div class="agrg">'+a.grade+' - '+a.fonction+'</div>'+qualBadges+'</div>'+
+        '<div class="agra">'+
+        '<button class="mvb" data-id="'+a.id+'" data-eq="'+eq+'" onclick="openEditAgent(this.dataset.id,this.dataset.eq)">Modifier</button>'+
+        '<button class="mvb" data-id="'+a.id+'" data-eq="'+eq+'" data-nom="'+a.nom+'" onclick="openMove(this.dataset.id,this.dataset.eq,this.dataset.nom)">Deplacer</button>'+
+        '<button class="dlb" data-id="'+a.id+'" data-eq="'+eq+'" onclick="delAg(this.dataset.id,this.dataset.eq)">Suppr.</button>'+
+        '</div>';
+      row.appendChild(mainDiv);
+      // Formulaire modification (caché)
+      var editDiv = document.createElement("div"); editDiv.id="edit_"+a.id; editDiv.style="display:none;width:100%;margin-top:10px;background:var(--noir);border-radius:8px;padding:12px";
+      var qualChecks = QUALS.map(function(q){
+        var checked = quals.indexOf(q)>-1 ? "checked" : "";
+        return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;margin:3px 6px 3px 0"><input type="checkbox" class="eq_'+a.id+'" value="'+q+'" '+checked+'> '+q+'</label>';
+      }).join("");
+      editDiv.innerHTML = '<div class="lbl" style="margin-bottom:6px">Qualifications de '+a.nom+'</div>'+
+        '<div style="display:flex;flex-wrap:wrap;margin-bottom:10px">'+qualChecks+'</div>'+
+        '<div style="display:flex;gap:8px">'+
+        '<button class="btn btn-r" style="margin-bottom:0;padding:8px 14px;font-size:12px" data-id="'+a.id+'" data-eq="'+eq+'" onclick="saveAgentQuals(this.dataset.id,this.dataset.eq)">Sauvegarder</button>'+
+        '<button class="btn btn-rv" style="margin-bottom:0;padding:8px 14px;font-size:12px" data-id="'+a.id+'" onclick="closeEditAgent(this.dataset.id)">Annuler</button>'+
+        '</div>';
+      row.appendChild(editDiv);
       sec.appendChild(row);
     });
-    var addBtn=document.createElement("button"); addBtn.className="btn btn-bl";
-    addBtn.style="padding:8px 14px;font-size:12px;margin-top:6px";
+    // Formulaire ajout
+    var addBtn = document.createElement("button"); addBtn.className="btn btn-bl"; addBtn.style="padding:8px 14px;font-size:12px;margin-top:6px";
     addBtn.textContent="+ Ajouter un agent";
-    addBtn.onclick=function(){document.getElementById("af_"+eq).style.display="block";};
+    addBtn.onclick = function(){ document.getElementById("af_"+eq).style.display="block"; };
     sec.appendChild(addBtn);
-    var form=document.createElement("div"); form.className="af"; form.id="af_"+eq;
-    form.innerHTML='<label class="lbl" style="margin-bottom:8px">Nouveau membre - Équipe '+eq+'</label>'+
+    var formDiv = document.createElement("div"); formDiv.className="af"; formDiv.id="af_"+eq;
+    var qualChecksNew = QUALS.map(function(q){
+      return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;margin:3px 6px 3px 0"><input type="checkbox" class="nq nq_new_'+eq+'" value="'+q+'"> '+q+'</label>';
+    }).join("");
+    formDiv.innerHTML = '<label class="lbl" style="margin-bottom:8px">Nouveau membre - Equipe '+eq+'</label>'+
       '<input type="text" id="nn_'+eq+'" placeholder="Nom Prénom">'+
       '<div class="f2">'+
       '<select id="ng_'+eq+'"><option value="">Grade</option>'+
       '<option>Lieutenant</option><option>Adjudant Chef</option><option>Adjudant</option>'+
       '<option>Sergent Chef</option><option>Sergent</option><option>Caporal Chef</option>'+
       '<option>Caporal</option><option>Sapeur 1ere Cl.</option><option>Sapeur</option></select>'+
-      '<select id="nf_'+eq+'"><option value="">Fonction</option>'+
+      '<select id="nf_'+eq+'"><option value="">Fonction principale</option>'+
       '<option>Chef de garde</option><option>Chef agres VSAV</option>'+
       '<option>Conducteur VSAV</option><option>Equipier</option><option>Autre</option></select>'+
       '</div>'+
+      '<div class="lbl" style="margin-top:8px;margin-bottom:6px">Qualifications</div>'+
+      '<div style="display:flex;flex-wrap:wrap;margin-bottom:10px">'+qualChecksNew+'</div>'+
       '<div style="display:flex;gap:8px;margin-top:4px">'+
-      '<button class="btn btn-r" style="margin-bottom:0" onclick="addAg(\''+eq+'\')">Ajouter</button>'+
-      '<button class="btn btn-rv" style="margin-bottom:0" onclick="document.getElementById(\'af_'+eq+'\').style.display=\'none\'">Annuler</button>'+
+      '<button class="btn btn-r" style="margin-bottom:0" data-eq="'+eq+'" onclick="addAg(this.dataset.eq)">Ajouter</button>'+
+      '<button class="btn btn-rv" style="margin-bottom:0" data-eq="'+eq+'" onclick="closeAddForm(this.dataset.eq)">Annuler</button>'+
       '</div>';
-    sec.appendChild(form);
+    sec.appendChild(formDiv);
     cont.appendChild(sec);
   });
 }
+
+function closeAddForm(eq) {
+  var el = document.getElementById("af_"+eq);
+  if(el) el.style.display = "none";
+}
+
+function closeEditAgent(id) {
+  var el = document.getElementById("edit_"+id);
+  if(el) el.style.display = "none";
+}
+
+function openEditAgent(id, eq) {
+  var editDiv = document.getElementById("edit_"+id);
+  if (!editDiv) return;
+  editDiv.style.display = editDiv.style.display === "none" ? "block" : "none";
+}
+
+function saveAgentQuals(id, eq) {
+  var quals = [];
+  document.querySelectorAll(".eq_"+id+":checked").forEach(function(c){ quals.push(c.value); });
+  var agents = JSON.parse(JSON.stringify(DB.agents[eq]||[]));
+  agents.forEach(function(a){ if(a.id===id) a.qualifications=quals; });
+  sbSet("/agents/"+eq, agents).then(function(){
+    DB.agents[eq] = agents;
+    document.getElementById("edit_"+id).style.display="none";
+    renderAdmAgs();
+    toast("Qualifications sauvegardées !");
+  });
+}
+
 
 function addAg(eq){
   var nom=document.getElementById("nn_"+eq).value.trim();
@@ -962,7 +1020,7 @@ function addAg(eq){
   var fn=document.getElementById("nf_"+eq).value;
   if(!nom||!grade||!fn){toast("Remplir tous les champs");return;}
   var quals=[];
-  document.querySelectorAll(".nq_"+eq+":checked").forEach(function(c){quals.push(c.value);});
+  document.querySelectorAll(".nq_new_"+eq+":checked").forEach(function(c){quals.push(c.value);});
   if(!DB.agents[eq])DB.agents[eq]=[];
   DB.agents[eq].push({id:"a"+Date.now(),nom:nom,grade:grade,fonction:fn,qualifications:quals});
   sbSet("agents",DB.agents).then(function(){
