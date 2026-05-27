@@ -129,6 +129,7 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
   <div class="tab" onclick="showTab('planning')" id="t-planning"><span class="ti">📅</span>Planning</div>
   <div class="tab" onclick="showTab('admin')" id="t-admin"><span class="ti">⚙️</span>Admin</div>
   <div class="tab" onclick="showTab('stats')" id="t-stats"><span class="ti">📊</span>Stats</div>
+  <div class="tab" onclick="showTab('qr')" id="t-qr"><span class="ti">📱</span>QR Code</div>
 </div>
 
 <!-- AGENT -->
@@ -237,6 +238,22 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
   </div>
 </div>
 
+<!-- QR CODE -->
+<div class="vw" id="v-qr">
+  <div class="card" style="text-align:center">
+    <label class="lbl">QR Code à afficher à la caserne</label>
+    <div style="font-size:13px;color:var(--gris-s);margin-bottom:16px">Tes agents scannent ce code avec leur téléphone et arrivent directement sur l'appli</div>
+    <div id="qrcode" style="display:flex;justify-content:center;margin-bottom:16px"></div>
+    <div style="font-size:11px;color:var(--gris-s);word-break:break-all;margin-bottom:16px" id="qrUrl"></div>
+    <button class="btn btn-or" onclick="printQR()">🖨️ Imprimer le QR Code</button>
+  </div>
+  <div class="card">
+    <label class="lbl">Affiche à imprimer</label>
+    <div style="font-size:13px;color:var(--gris-s);margin-bottom:12px">Une affiche complète avec le QR code et les instructions pour tes agents</div>
+    <button class="btn btn-vt" onclick="printAffiche()">📄 Générer l'affiche</button>
+  </div>
+</div>
+
 <!-- ADMIN -->
 <div class="vw" id="v-admin">
   <div id="adminGate">
@@ -251,10 +268,21 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
     <div class="atabs">
       <button class="atab on" onclick="admTab('agents',this)">👥 Agents</button>
       <button class="atab" onclick="admTab('codes',this)">🔑 Codes</button>
+      <button class="atab" onclick="admTab('historique',this)">📚 Historique</button>
     </div>
     <div id="tabAgents"><div id="eqList"></div></div>
     <div id="tabCodes" style="display:none">
       <div class="card"><label class="lbl">Codes d'accès</label><div id="codeList"></div></div>
+    </div>
+    <div id="tabHistorique" style="display:none">
+      <div class="card">
+        <label class="lbl">Sauvegarder le weekend actuel</label>
+        <div style="font-size:13px;color:var(--gris-s);margin-bottom:12px">Archive le planning actuel avant de réinitialiser</div>
+        <input type="text" id="histoLabel" placeholder="Ex: Weekend 31 mai-1 juin 2025" style="margin-bottom:10px">
+        <button class="btn btn-vt" style="margin-bottom:0" onclick="sauvegarderWeekend()">💾 Sauvegarder</button>
+      </div>
+      <div class="sec-title" style="margin-top:4px">WEEKENDS PASSÉS</div>
+      <div id="histoList"></div>
     </div>
   </div>
 </div>
@@ -373,6 +401,7 @@ function showTab(v) {
   document.getElementById("v-"+v).classList.add("on");
   document.getElementById("t-"+v).classList.add("on");
   if ((v==="chef"&&STATE.chef)||(v==="planning"&&STATE.plan)) startPoll();
+  if (v==="qr") initQR();
 }
 
 function logout() {
@@ -863,6 +892,8 @@ function admTab(tab,btn){
   btn.classList.add("on");
   document.getElementById("tabAgents").style.display=tab==="agents"?"":"none";
   document.getElementById("tabCodes").style.display=tab==="codes"?"":"none";
+  document.getElementById("tabHistorique").style.display=tab==="historique"?"":"none";
+  if(tab==="historique") renderHistorique();
 }
 
 function renderAdmAgs(){
@@ -1096,6 +1127,7 @@ function statsLogin(){
     document.getElementById("statsGate").style.display="none";
     document.getElementById("statsContent").style.display="block";
     renderStats();
+    renderCompteurInStats();
   } else { document.getElementById("statsErr").style.display="block"; }
 }
 
@@ -1167,6 +1199,189 @@ function validerRem(agentId, j) {
   sbSet("selections", DB.sel).then(function(){
     toast(DB.sel[agentId][j+"_rem"] ? "✅ Remplacant validé" : "❌ Validation retirée");
     renderChef();
+  });
+}
+
+// ===== QR CODE =====
+var APP_URL = window.location.href;
+
+function initQR() {
+  var qrDiv = document.getElementById("qrcode");
+  var urlDiv = document.getElementById("qrUrl");
+  if (!qrDiv) return;
+  urlDiv.textContent = APP_URL;
+  // Use Google Charts QR API
+  var img = document.createElement("img");
+  img.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(APP_URL);
+  img.style.cssText = "width:200px;height:200px;border-radius:12px;";
+  img.alt = "QR Code";
+  qrDiv.innerHTML = "";
+  qrDiv.appendChild(img);
+}
+
+function printQR() {
+  var w = window.open("","_blank");
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{text-align:center;font-family:Arial;padding:40px;} h2{color:#C0392B;} p{color:#666;font-size:14px;margin:10px 0;} img{border:3px solid #C0392B;border-radius:12px;padding:10px;} .url{font-size:11px;color:#999;word-break:break-all;max-width:300px;margin:auto;}</style></head><body>'+
+    '<h2>🚒 ASTREINTE WEEKEND</h2>'+
+    '<p>Scanne ce QR code pour indiquer tes disponibilités</p>'+
+    '<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data='+encodeURIComponent(APP_URL)+'" width="250" height="250">'+
+    '<p class="url">'+APP_URL+'</p>'+
+    '<button onclick="window.print()" style="margin-top:20px;background:#C0392B;color:white;border:none;padding:10px 24px;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimer</button>'+
+    '</body></html>');
+  w.document.close();
+}
+
+function printAffiche() {
+  var w = window.open("","_blank");
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'+
+    '*{box-sizing:border-box;margin:0;padding:0;}'+
+    'body{font-family:"Helvetica Neue",Arial,sans-serif;background:white;}'+
+    '.header{background:linear-gradient(135deg,#96281B,#C0392B);padding:30px;text-align:center;color:white;}'+
+    '.logo{font-size:60px;margin-bottom:10px;}'+
+    'h1{font-size:28px;font-weight:700;letter-spacing:2px;}'+
+    'h2{font-size:16px;font-weight:400;opacity:0.85;margin-top:4px;}'+
+    '.content{padding:30px;text-align:center;}'+
+    '.qr-box{background:#f5f5f5;border-radius:16px;padding:24px;display:inline-block;margin:20px 0;}'+
+    'h3{font-size:20px;color:#C0392B;margin-bottom:16px;}'+
+    '.steps{text-align:left;max-width:320px;margin:0 auto 20px;}'+
+    '.step{display:flex;align-items:center;gap:12px;margin-bottom:12px;font-size:14px;}'+
+    '.num{background:#C0392B;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}'+
+    '.url{font-size:11px;color:#999;word-break:break-all;margin-top:10px;}'+
+    '.footer{background:#2C2C2C;padding:16px;text-align:center;color:#BDC3C7;font-size:12px;}'+
+    '@media print{button{display:none;}}'+
+    '</style></head><body>'+
+    '<div class="header"><div class="logo">🚒</div><h1>SAPEURS POMPIERS DE RUOMS</h1><h2>Planning des astreintes weekend</h2></div>'+
+    '<div class="content">'+
+    '<h3>Indique tes disponibilités en 30 secondes !</h3>'+
+    '<div class="steps">'+
+    '<div class="step"><div class="num">1</div><div>Scanne le QR code avec ton téléphone</div></div>'+
+    '<div class="step"><div class="num">2</div><div>Sélectionne ton nom et ton équipe</div></div>'+
+    '<div class="step"><div class="num">3</div><div>Coche tes créneaux disponibles</div></div>'+
+    '<div class="step"><div class="num">4</div><div>Appuie sur Envoyer</div></div>'+
+    '</div>'+
+    '<div class="qr-box">'+
+    '<img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(APP_URL)+'" width="220" height="220" style="display:block;">'+
+    '<div class="url">'+APP_URL+'</div>'+
+    '</div>'+
+    '</div>'+
+    '<div class="footer">Sapeurs Pompiers de Ruoms — Application Astreinte Weekend</div>'+
+    '<div style="text-align:center;padding:16px"><button onclick="window.print()" style="background:#C0392B;color:white;border:none;padding:12px 30px;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimer</button></div>'+
+    '</body></html>');
+  w.document.close();
+}
+
+// ===== HISTORIQUE =====
+function sauvegarderWeekend() {
+  var label = document.getElementById("histoLabel").value.trim();
+  if (!label) { toast("Donne un nom à ce weekend"); return; }
+  var wk = document.getElementById("chefWk") ? document.getElementById("chefWk").value : "we";
+  var snapshot = {
+    label: label,
+    date: new Date().toLocaleDateString("fr-FR"),
+    wkType: wk,
+    dispos: JSON.parse(JSON.stringify(DB.dispos)),
+    selections: JSON.parse(JSON.stringify(DB.sel)),
+    agents: JSON.parse(JSON.stringify(DB.agents)),
+    timestamp: new Date().toISOString()
+  };
+  sbGet("historique").then(function(histo) {
+    var h = histo || [];
+    h.unshift(snapshot);
+    if (h.length > 20) h = h.slice(0, 20); // max 20 weekends
+    sbSet("historique", h).then(function() {
+      document.getElementById("histoLabel").value = "";
+      renderHistorique();
+      toast("Weekend sauvegardé !");
+    });
+  });
+}
+
+function renderHistorique() {
+  var cont = document.getElementById("histoList");
+  if (!cont) return;
+  sbGet("historique").then(function(histo) {
+    if (!histo || !histo.length) {
+      cont.innerHTML = '<div class="card" style="text-align:center;color:var(--gris-s)">Aucun weekend sauvegardé</div>';
+      return;
+    }
+    cont.innerHTML = "";
+    histo.forEach(function(h, idx) {
+      var allAgs = [];
+      ["1","2","3","4"].forEach(function(eq){ Object.values(h.agents[eq]||[]).forEach(function(a){ allAgs.push(a); }); });
+      var selCount = 0;
+      allAgs.forEach(function(a){ Object.values(h.selections[a.id]||{}).forEach(function(v){ if(v) selCount++; }); });
+      var card = document.createElement("div");
+      card.className = "card";
+      card.style.marginBottom = "10px";
+      card.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'+
+        '<div><div style="font-weight:600;font-size:14px">'+h.label+'</div>'+
+        '<div style="font-size:11px;color:var(--gris-s);margin-top:2px">'+h.date+' — '+selCount+' créneaux attribués</div></div>'+
+        '<button class="bsm" style="background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v)" onclick="voirHistorique('+idx+')">Voir</button>'+
+        '</div>'+
+        '<div id="histo_detail_'+idx+'" style="display:none"></div>';
+      cont.appendChild(card);
+    });
+    cont._histo = histo;
+  });
+}
+
+function voirHistorique(idx) {
+  var cont = document.getElementById("histoList");
+  var histo = cont._histo;
+  if (!histo) return;
+  var h = histo[idx];
+  var detail = document.getElementById("histo_detail_"+idx);
+  if (detail.style.display !== "none") { detail.style.display = "none"; return; }
+  var jours = WK[h.wkType||"we"];
+  var allAgs = [];
+  ["1","2","3","4"].forEach(function(eq){ (h.agents[eq]||[]).forEach(function(a){ allAgs.push(Object.assign({},a,{equipe:eq})); }); });
+  var html = "";
+  jours.forEach(function(j) {
+    var c = CR[j];
+    var att = allAgs.filter(function(a){ return (h.selections[a.id]||{})[j]; });
+    html += '<div style="margin-bottom:8px;border-left:3px solid '+CLRS[c.c]+';padding-left:8px">'+
+      '<div style="font-size:12px;font-weight:600;color:'+CLRS[c.c]+'">'+c.l+' ('+c.h+')</div>'+
+      (att.length > 0 ? att.map(function(a){ return '<div style="font-size:11px;color:var(--gris)">• '+a.nom+'</div>'; }).join("") : '<div style="font-size:11px;color:var(--gris-s);font-style:italic">Aucun agent</div>')+
+      '</div>';
+  });
+  detail.innerHTML = html || '<div style="color:var(--gris-s);font-size:12px">Aucune donnée</div>';
+  detail.style.display = "block";
+}
+
+// ===== COMPTEUR ASTREINTES =====
+function renderCompteurInStats() {
+  sbGet("historique").then(function(histo) {
+    if (!histo || !histo.length) return;
+    var compteur = {};
+    var allAgs = [];
+    ["1","2","3","4"].forEach(function(eq){ (DB.agents[eq]||[]).forEach(function(a){ allAgs.push(Object.assign({},a,{equipe:eq})); }); });
+    allAgs.forEach(function(a){ compteur[a.id] = {agent:a, count:0}; });
+    histo.forEach(function(h){
+      allAgs.forEach(function(a){
+        var hasSel = Object.values(h.selections[a.id]||{}).some(function(v){ return v; });
+        if (hasSel) { if(compteur[a.id]) compteur[a.id].count++; }
+      });
+    });
+    var sorted = Object.values(compteur).sort(function(a,b){ return b.count-a.count; });
+    var grid = document.getElementById("statsGrid");
+    if (!grid) return;
+    var html = '<div class="card" style="margin-top:14px"><label class="lbl">Compteur astreintes ('+histo.length+' weekends archivés)</label>';
+    sorted.forEach(function(item){
+      var pct = histo.length > 0 ? Math.round(item.count/histo.length*100) : 0;
+      var color = pct >= 75 ? "var(--rouge-v)" : pct >= 50 ? "var(--or)" : "var(--vert-c)";
+      html += '<div style="margin-bottom:10px">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
+        '<div><div style="font-size:13px;font-weight:600">'+item.agent.nom+'</div>'+
+        '<div style="font-size:10px;color:var(--gris-s)">Éq.'+item.agent.equipe+' — '+item.agent.grade+'</div></div>'+
+        '<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:'+color+'">'+item.count+'</div>'+
+        '</div>'+
+        '<div style="background:#1A1A1A;border-radius:20px;height:6px;overflow:hidden">'+
+        '<div style="background:'+color+';height:100%;width:'+pct+'%;border-radius:20px"></div>'+
+        '</div></div>';
+    });
+    html += '</div>';
+    grid.innerHTML += html;
   });
 }
 
