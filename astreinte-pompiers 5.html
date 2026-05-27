@@ -967,6 +967,11 @@ function admTab(tab,btn){
 
 function renderAdmAgs() {
   if(!STATE.admin) return;
+  getParams(function(){ _renderAdmAgs(); });
+}
+
+function _renderAdmAgs() {
+  if(!STATE.admin) return;
   var cont = document.getElementById("eqList");
   cont.innerHTML = "";
   var QUALS = ["PL","VSAV","Chef agres","Chef garde","Prompt secours","Secouriste","FDF","GRIMP","NRBC"];
@@ -1067,7 +1072,7 @@ function saveAgentQuals(id, eq) {
   document.querySelectorAll(".eq_"+id+":checked").forEach(function(c){ quals.push(c.value); });
   var agents = JSON.parse(JSON.stringify(DB.agents[eq]||[]));
   agents.forEach(function(a){ if(a.id===id) a.qualifications=quals; });
-  sbSet("/agents/"+eq, agents).then(function(){
+  sbSet("agents/"+eq, agents).then(function(){
     DB.agents[eq] = agents;
     document.getElementById("edit_"+id).style.display="none";
     renderAdmAgs();
