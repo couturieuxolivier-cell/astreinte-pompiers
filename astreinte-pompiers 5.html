@@ -626,66 +626,108 @@ function getAgs(eq) {
 
 function renderChef() {
   if (!STATE.chef) return;
-  var wk=document.getElementById("chefWk").value;
-  var eq=document.getElementById("chefEq").value;
-  var jours=WK[wk]; var ags=getAgs(eq);
-  var rep=ags.filter(function(a){return DB.dispos[a.id];}).length;
-  var tot=0; ags.forEach(function(a){jours.forEach(function(j){if((DB.sel[a.id]||{})[j])tot++;});});
-  document.getElementById("statsBar").innerHTML=
+  var wk = document.getElementById("chefWk").value;
+  var eq = document.getElementById("chefEq").value;
+  var jours = WK[wk];
+  var ags = getAgs(eq);
+  var repondu = ags.filter(function(a){ return DB.dispos[a.id]; }).length;
+  var selTotal = 0;
+  ags.forEach(function(a){
+    jours.forEach(function(j){ if((DB.sel[a.id]||{})[j]) selTotal++; });
+  });
+  document.getElementById("statsBar").innerHTML =
     '<div class="sbox"><div class="snum" style="color:var(--rouge-v)">'+ags.length+'</div><div class="slbl">Agents</div></div>'+
-    '<div class="sbox"><div class="snum" style="color:var(--or)">'+rep+'</div><div class="slbl">Ont répondu</div></div>'+
-    '<div class="sbox"><div class="snum" style="color:var(--vert-c)">'+tot+'</div><div class="slbl">Attribués</div></div>';
-  var cont=document.getElementById("agCards"); cont.innerHTML="";
-  if (!ags.length){cont.innerHTML='<div class="nr">Aucun agent</div>';return;}
-  ags.forEach(function(ag){
-    var d=DB.dispos[ag.id]; var agSel=DB.sel[ag.id]||{};
-    if (!d){
-      if (STATE.filter==="dispos") return;
-      var div=document.createElement("div"); div.className="ac nd";
-      div.innerHTML='<div class="ach"><div><div class="acn">'+ag.nom+'</div><div class="acg">'+ag.grade+'</div></div><span class="db db-n">En attente</span></div>';
-      cont.appendChild(div); return;
+    '<div class="sbox"><div class="snum" style="color:var(--or)">'+repondu+'</div><div class="slbl">Ont répondu</div></div>'+
+    '<div class="sbox"><div class="snum" style="color:var(--vert-c)">'+selTotal+'</div><div class="slbl">Attribués</div></div>';
+
+  var cont = document.getElementById("agCards");
+  cont.innerHTML = "";
+
+  if (!ags.length) {
+    cont.innerHTML = '<div class="nr">Aucun agent</div>';
+    return;
+  }
+
+  ags.forEach(function(ag) {
+    var d = DB.dispos[ag.id];
+    var agSel = DB.sel[ag.id] || {};
+
+    if (!d) {
+      if (STATE.filter === "dispos") return;
+      var div = document.createElement("div");
+      div.className = "ac nd";
+      div.innerHTML = '<div class="ach"><div><div class="acn">'+ag.nom+'</div><div class="acg">'+ag.grade+'</div></div><span class="db db-n">En attente</span></div>';
+      cont.appendChild(div);
+      return;
     }
-    if (STATE.filter==="dispos"&&!d.dispoGlobale) return;
-    var disp=jours.filter(function(j){return d.creneaux&&d.creneaux[j]!==false&&d.dispoGlobale;});
-    var nbS=jours.filter(function(j){return agSel[j];}).length;
-    var sc=!d.dispoGlobale?"db-n":disp.length===jours.length?"db-o":"db-p";
-    var sl=!d.dispoGlobale?"Indispo":disp.length===jours.length?"Dispo":"Partiel";
-    var card=document.createElement("div"); card.className="ac"+(disp.length>0?" hd":"");
-    var hdr='<div class="ach"><div><div class="acn">'+ag.nom+'</div><div class="acg">'+ag.grade+(eq==="all"?" · Eq."+ag.equipe:"")+'</div></div>'+
-      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="db '+sc+'">'+sl+'</span>'+
-      (nbS>0?'<span style="font-size:10px;color:var(--vert-c)">'+nbS+' attribué'+(nbS>1?"s":"")+'</span>':'')+
-      '</div></div>';
-    card.innerHTML=hdr;
-    var crdiv=document.createElement("div");
-    jours.forEach(function(j){
-      var c=CR[j]; var isDispo=disp.indexOf(j)>-1; var isSel=!!agSel[j];
-      var row=document.createElement("div");
-      row.className="ccr"+(isSel?" sel":"")+(isDispo?"":" na");
-      var agHeures=(d.heures&&d.heures[j])||{};
-      var heuresStr=agHeures.debut&&agHeures.fin?agHeures.debut+' - '+agHeures.fin:c.h;
-      var remInfo="";
-      if(agHeures.remplacant){
-        var remAg=null;
-        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(a){if(a.id===agHeures.remplacant)remAg=a;});});
-        if(remAg){
-          var remValidated=(DB.sel[agent.id]||{})[j+"_rem"];
-          remInfo='<div style="font-size:10px;color:#F39C12;margin-top:3px;display:flex;align-items:center;gap:6px">'+
-            '🔄 '+remAg.nom+(agHeures.remDebut&&agHeures.remFin?' ('+agHeures.remDebut+'-'+agHeures.remFin+')':'')+
-            '<button class="vrem-btn" data-aid="'+ag.id+'" data-j="'+j+'" style="background:'+(remValidated?'#27AE60':'#444')+';border:none;color:white;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;font-family:inherit">'+(remValidated?'Valide':'Valider')+'</button>'+
+
+    if (STATE.filter === "dispos" && !d.dispoGlobale) return;
+
+    var disp = jours.filter(function(j){
+      return d.creneaux && d.creneaux[j] !== false && d.dispoGlobale;
+    });
+    var nbSel = jours.filter(function(j){ return agSel[j]; }).length;
+    var sc = !d.dispoGlobale ? "db-n" : disp.length === jours.length ? "db-o" : "db-p";
+    var sl = !d.dispoGlobale ? "Indispo" : disp.length === jours.length ? "Dispo" : "Partiel";
+
+    var card = document.createElement("div");
+    card.className = "ac" + (disp.length > 0 ? " hd" : "");
+
+    // Header
+    var hdr = document.createElement("div");
+    hdr.className = "ach";
+    hdr.innerHTML =
+      '<div><div class="acn">'+ag.nom+'</div><div class="acg">'+ag.grade+(eq==="all"?" · Eq."+ag.equipe:"")+'</div></div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
+      '<span class="db '+sc+'">'+sl+'</span>'+
+      (nbSel > 0 ? '<span style="font-size:10px;color:var(--vert-c)">'+nbSel+' attribué'+(nbSel>1?"s":"")+'</span>' : '')+
+      '</div>';
+    card.appendChild(hdr);
+
+    // Créneaux
+    var crdiv = document.createElement("div");
+    jours.forEach(function(j) {
+      var c = CR[j];
+      var isDispo = disp.indexOf(j) > -1;
+      var isSel = !!agSel[j];
+      var agH = (d.heures && d.heures[j]) || {};
+      var heuresStr = agH.debut && agH.fin ? agH.debut + " - " + agH.fin : c.h;
+
+      var row = document.createElement("div");
+      row.className = "ccr" + (isSel ? " sel" : "") + (isDispo ? "" : " na");
+
+      // Infos remplacant
+      var remHtml = "";
+      if (agH.remplacant) {
+        var remAg = null;
+        ["1","2","3","4"].forEach(function(e){ (DB.agents[e]||[]).forEach(function(a){ if(a.id===agH.remplacant) remAg=a; }); });
+        if (remAg) {
+          var remVal = !!(DB.sel[ag.id]||{})[j+"_rem"];
+          var rHstr = agH.remDebut && agH.remFin ? " ("+agH.remDebut+"-"+agH.remFin+")" : "";
+          remHtml = '<div style="font-size:10px;color:#F39C12;margin-top:3px;display:flex;align-items:center;gap:6px">'+
+            "Rempl: "+remAg.nom+rHstr+
+            '<button class="vrem-btn" data-aid="'+ag.id+'" data-j="'+j+'" style="background:'+(remVal?"#27AE60":"#444")+';border:none;color:white;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;font-family:inherit">'+(remVal?"Valide":"Valider")+'</button>'+
             '</div>';
         }
       }
-      row.innerHTML='<div class="ccrl"><div class="ccrd '+c.c+'" style="color:'+CLRS[c.c]+'">'+c.l.substring(0,3).toUpperCase()+'</div>'+
-        '<div><div class="ccri">'+c.l+'</div><div class="ccrh">'+heuresStr+'</div>'+remInfo+'</div></div>'+
+
+      row.innerHTML =
+        '<div class="ccrl">'+
+        '<div class="ccrd '+c.c+'" style="color:'+CLRS[c.c]+'">'+c.l.substring(0,3).toUpperCase()+'</div>'+
+        '<div><div class="ccri">'+c.l+'</div><div class="ccrh">'+heuresStr+'</div>'+remHtml+'</div>'+
+        '</div>'+
         '<div>'+(isSel?"✅":isDispo?"⬜":"🚫")+'</div>';
-      if (isDispo){
-        (function(aid,jour){row.onclick=function(){toggleCr(aid,jour);};})(ag.id,j);
+
+      if (isDispo) {
+        (function(aid, jour){ row.onclick = function(){ toggleCr(aid, jour); }; })(ag.id, j);
       }
       crdiv.appendChild(row);
     });
-    card.appendChild(crdiv); cont.appendChild(card);
+    card.appendChild(crdiv);
+    cont.appendChild(card);
   });
-  // Delegation pour boutons remplacant
+
+  // Boutons remplacant
   cont.querySelectorAll(".vrem-btn").forEach(function(btn){
     btn.addEventListener("click", function(e){
       e.stopPropagation();
@@ -693,6 +735,7 @@ function renderChef() {
     });
   });
 }
+
 
 function toggleCr(agId, j) {
   if (!DB.sel[agId]) DB.sel[agId]={};
