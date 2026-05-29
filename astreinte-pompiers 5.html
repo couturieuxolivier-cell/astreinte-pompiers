@@ -391,20 +391,36 @@ function sbGet(id) {
 }
 
 function sbSet(id, value) {
-  return fetch(SB_URL + "/rest/v1/data?id=eq." + id, {
-    method: "PATCH",
-    headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
-    body: JSON.stringify({ value: value })
+  return fetch(SB_URL + "/rest/v1/data", {
+    method: "POST",
+    headers: { 
+      "apikey": SB_KEY, 
+      "Authorization": "Bearer " + SB_KEY, 
+      "Content-Type": "application/json", 
+      "Prefer": "resolution=merge-duplicates,return=minimal"
+    },
+    body: JSON.stringify({ id: id, value: value })
+  }).then(function(r) {
+    if (!r.ok) {
+      // Fallback to PATCH if POST fails
+      return fetch(SB_URL + "/rest/v1/data?id=eq." + id, {
+        method: "PATCH",
+        headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
+        body: JSON.stringify({ value: value })
+      });
+    }
+    return r;
   }).catch(function(e) { console.error("sbSet error:", e); });
 }
 
 function loadAll(cb) {
-  Promise.all([sbGet("agents"), sbGet("codes"), sbGet("dispos"), sbGet("selections")])
+  Promise.all([sbGet("agents"), sbGet("codes"), sbGet("dispos"), sbGet("selections"), sbGet("params")])
     .then(function(res) {
       DB.agents = res[0] || {"1":[],"2":[],"3":[],"4":[]};
       DB.codes = res[1] || {admin:"admin1234",selection:"chef2024",planning:"planning2024"};
       DB.dispos = res[2] || {};
       DB.sel = res[3] || {};
+      DB.params = res[4] || {qualifications: DEFAULT_QUALS.slice(), fonctions: DEFAULT_FONCTIONS.slice()};
       if (cb) cb();
     });
 }
@@ -1072,8 +1088,8 @@ function saveAgentQuals(id, eq) {
   document.querySelectorAll(".eq_"+id+":checked").forEach(function(c){ quals.push(c.value); });
   var agents = JSON.parse(JSON.stringify(DB.agents[eq]||[]));
   agents.forEach(function(a){ if(a.id===id) a.qualifications=quals; });
-  sbSet("agents/"+eq, agents).then(function(){
-    DB.agents[eq] = agents;
+  DB.agents[eq] = agents;
+  sbSet("agents", DB.agents).then(function(){
     document.getElementById("edit_"+id).style.display="none";
     renderAdmAgs();
     toast("Qualifications sauvegardées !");
@@ -1534,9 +1550,10 @@ var DEFAULT_QUALS = ["PL","VSAV","Chef agres","Chef garde","Prompt secours","Sec
 var DEFAULT_FONCTIONS = ["Chef de garde","Chef agres VSAV","Conducteur VSAV","Equipier","Autre"];
 
 function getParams(cb) {
+  if (DB.params) { if(cb) cb(DB.params); return; }
   sbGet("params").then(function(p) {
     if (!p) {
-      var def = {qualifications: DEFAULT_QUALS, fonctions: DEFAULT_FONCTIONS};
+      var def = {qualifications: DEFAULT_QUALS.slice(), fonctions: DEFAULT_FONCTIONS.slice()};
       sbSet("params", def).then(function(){ DB.params = def; if(cb) cb(def); });
     } else { DB.params = p; if(cb) cb(p); }
   });
@@ -1653,8 +1670,8 @@ function saveStatus() {
   var dateRetour = document.getElementById("statusRetour").value;
   var agents = JSON.parse(JSON.stringify(DB.agents[eq]||[]));
   agents.forEach(function(a){ if(a.id===agentId){ a.status=status; a.dateRetour=dateRetour; } });
-  sbSet("agents/"+eq, agents).then(function(){
-    DB.agents[eq]=agents;
+  DB.agents[eq] = agents;
+  sbSet("agents", DB.agents).then(function(){
     document.getElementById("statusModal").classList.remove("on");
     renderAdmAgs();
     toast("Statut mis à jour !");
