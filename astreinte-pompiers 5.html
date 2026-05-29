@@ -919,7 +919,11 @@ function renderPlan(){
         ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
         if(remAg){
           var rStr=hA.remDebut&&hA.remFin?'<span style="color:#1ABC9C;font-size:10px;margin-left:6px">'+hA.remDebut+'-'+hA.remFin+'</span>':'';
-          html+='<div class="pa" style="background:rgba(243,156,18,0.1);border-left:2px solid #F39C12">🔄 <div style="flex:1"><div style="display:flex;align-items:center">'+remAg.nom+rStr+'</div><div class="pag" style="color:#F39C12">Remplacant validé</div></div></div>';
+          html+='<div class="pa" style="background:rgba(243,156,18,0.08);border-left:2px solid #F39C12">'+
+            '🔄 <div style="flex:1">'+
+            '<div style="display:flex;align-items:center;flex-wrap:wrap">'+remAg.nom+rStr+'</div>'+
+            '<div class="pag" style="color:#F39C12">Remplacant de '+a.nom.split(" ")[0]+'</div>'+
+            '</div></div>';
         }
       }
     });}
