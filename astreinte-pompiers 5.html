@@ -874,15 +874,17 @@ function exportRecap(){
   var txt="RECAP SELECTION ASTREINTE\n"+"=".repeat(26)+"\n\n";
   jours.forEach(function(j){
     var c=CR[j]; txt+=c.l.toUpperCase()+" ("+c.h+") :\n";
-    ags.forEach(function(a){if((DB.sel[a.id]||{})[j])var hA=(DB.dispos[a.id]&&DB.dispos[a.id].heures&&DB.dispos[a.id].heures[j])||{};
-        var hStr=hA.debut&&hA.fin?" ["+hA.debut+"-"+hA.fin+"]":"";
-        txt+="  - "+a.nom+" ("+a.grade+")"+hStr+"\n";
-        if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
-          var remAg=null;
-          ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
-          if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="    > Remplacant: "+remAg.nom+rStr+"\n";}
-        }
-      });
+    ags.forEach(function(a){
+      if(!(DB.sel[a.id]||{})[j]) return;
+      var hA=(DB.dispos[a.id]&&DB.dispos[a.id].heures&&DB.dispos[a.id].heures[j])||{};
+      var hStr=hA.debut&&hA.fin?" ["+hA.debut+"-"+hA.fin+"]":"";
+      txt+="  - "+a.nom+" ("+a.grade+")"+hStr+"\n";
+      if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
+        var remAg=null;
+        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
+        if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="    > Remplacant: "+remAg.nom+rStr+"\n";}
+      }
+    });
     txt+="\n";
   });
   var blob=new Blob([txt],{type:"text/plain"});
