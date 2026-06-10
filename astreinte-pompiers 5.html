@@ -874,7 +874,15 @@ function exportRecap(){
   var txt="RECAP SELECTION ASTREINTE\n"+"=".repeat(26)+"\n\n";
   jours.forEach(function(j){
     var c=CR[j]; txt+=c.l.toUpperCase()+" ("+c.h+") :\n";
-    ags.forEach(function(a){if((DB.sel[a.id]||{})[j])txt+="  - "+a.nom+" ("+a.grade+")\n";});
+    ags.forEach(function(a){if((DB.sel[a.id]||{})[j])var hA=(DB.dispos[a.id]&&DB.dispos[a.id].heures&&DB.dispos[a.id].heures[j])||{};
+        var hStr=hA.debut&&hA.fin?" ["+hA.debut+"-"+hA.fin+"]":"";
+        txt+="  - "+a.nom+" ("+a.grade+")"+hStr+"\n";
+        if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
+          var remAg=null;
+          ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
+          if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="    > Remplacant: "+remAg.nom+rStr+"\n";}
+        }
+      });
     txt+="\n";
   });
   var blob=new Blob([txt],{type:"text/plain"});
@@ -939,7 +947,17 @@ function sharePlan(){
   var txt="PLANNING ASTREINTE WEEKEND\n"+"-".repeat(26)+"\n\n";
   jours.forEach(function(j){
     var c=CR[j]; var att=ags.filter(function(a){return (DB.sel[a.id]||{})[j];});
-    txt+=c.l+" ("+c.h+")\n"; att.forEach(function(a){txt+="  - "+a.nom+"\n";});
+    txt+=c.l+" ("+c.h+")\n";
+    att.forEach(function(a){
+      var dA=DB.dispos[a.id]||{}; var hA=(dA.heures&&dA.heures[j])||{};
+      var hStr=hA.debut&&hA.fin?" ["+hA.debut+"-"+hA.fin+"]":"";
+      txt+="  - "+a.nom+hStr+"\n";
+      if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
+        var remAg=null;
+        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
+        if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="  - "+remAg.nom+rStr+" (remplacant)\n";}
+      }
+    });
     if(!att.length)txt+="  - (aucun)\n"; txt+="\n";
   });
   if(navigator.share){navigator.share({title:"Planning Astreinte",text:txt});}
@@ -955,7 +973,16 @@ function exportPlan(){
   jours.forEach(function(j){
     var c=CR[j]; var att=ags.filter(function(a){return (DB.sel[a.id]||{})[j];});
     txt+=c.l.toUpperCase()+" ("+c.h+") :\n";
-    att.forEach(function(a){txt+="  - "+a.nom+" ("+a.grade+")\n";});
+    att.forEach(function(a){
+      var hA=(DB.dispos[a.id]&&DB.dispos[a.id].heures&&DB.dispos[a.id].heures[j])||{};
+      var hStr=hA.debut&&hA.fin?" ["+hA.debut+"-"+hA.fin+"]":"";
+      txt+="  - "+a.nom+" ("+a.grade+")"+hStr+"\n";
+      if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
+        var remAg=null;
+        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
+        if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="    > Remplacant: "+remAg.nom+rStr+"\n";}
+      }
+    });
     if(!att.length)txt+="  - (aucun)\n"; txt+="\n";
   });
   var blob=new Blob([txt],{type:"text/plain"});
@@ -1207,13 +1234,35 @@ function exportPDF(){
       '<div style="background:'+bg+';padding:10px 16px">';
     if(att.length>0){
       att.forEach(function(a){
+        var agH=(DB.dispos[a.id]&&DB.dispos[a.id].heures&&DB.dispos[a.id].heures[j])||{};
         var initiales=a.nom.split(" ").map(function(n){return n[0];}).join("").substring(0,2).toUpperCase();
+        var dA = DB.dispos[a.id] || {};
+        var hA = (dA.heures && dA.heures[j]) || {};
+        var hStr = hA.debut && hA.fin ? hA.debut + " - " + hA.fin : c.h;
         crHtml+='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.06)">'+
           '<div style="width:32px;height:32px;border-radius:50%;background:'+color+';color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">'+initiales+'</div>'+
-          '<div>'+
-          '<div style="font-size:13px;font-weight:600;color:#1a1a1a">'+a.nom+'</div>'+
+          '<div style="flex:1">'+
+          '<div style="font-size:13px;font-weight:600;color:#1a1a1a;display:flex;align-items:center;gap:8px">'+a.nom+
+          '<span style="font-size:11px;font-weight:400;color:'+color+';background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:10px">'+hStr+'</span></div>'+
           '<div style="font-size:11px;color:#666">'+a.grade+' — '+a.fonction+'</div>'+
           '</div></div>';
+        // Remplacant dans PDF
+        if (hA.remplacant && (DB.sel[a.id]||{})[j+"_rem"]) {
+          var remAg = null;
+          ["1","2","3","4"].forEach(function(eq){ (DB.agents[eq]||[]).forEach(function(ag){ if(ag.id===hA.remplacant) remAg=ag; }); });
+          if (remAg) {
+            var rStr = hA.remDebut && hA.remFin ? hA.remDebut + " - " + hA.remFin : "";
+            var remInit = remAg.nom.split(" ").map(function(n){return n[0];}).join("").substring(0,2).toUpperCase();
+            crHtml+='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.06);background:rgba(243,156,18,0.05)">'+
+              '<div style="width:32px;height:32px;border-radius:50%;background:#F39C12;color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">'+remInit+'</div>'+
+              '<div style="flex:1">'+
+              '<div style="font-size:13px;font-weight:600;color:#1a1a1a;display:flex;align-items:center;gap:8px">'+remAg.nom+
+              (rStr?'<span style="font-size:11px;font-weight:400;color:#F39C12;background:rgba(243,156,18,0.1);padding:2px 6px;border-radius:10px">'+rStr+'</span>':'')+
+              '</div>'+
+              '<div style="font-size:11px;color:#F39C12">Remplacant de '+a.nom.split(" ")[0]+'</div>'+
+              '</div></div>';
+          }
+        }
       });
     } else {
       crHtml+='<div style="color:#999;font-style:italic;font-size:12px;padding:6px 0">Aucun agent attribué</div>';
