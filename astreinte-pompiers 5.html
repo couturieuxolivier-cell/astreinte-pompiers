@@ -887,9 +887,7 @@ function exportRecap(){
     });
     txt+="\n";
   });
-  var blob=new Blob([txt],{type:"text/plain"});
-  var a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download="recap.txt"; a.click();
+  showTextExport(txt, "Récap Sélection");
 }
 
 // ===== PLANNING =====
@@ -987,9 +985,7 @@ function exportPlan(){
     });
     if(!att.length)txt+="  - (aucun)\n"; txt+="\n";
   });
-  var blob=new Blob([txt],{type:"text/plain"});
-  var a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download="planning.txt"; a.click();
+  showTextExport(txt, "Planning Astreinte");
 }
 
 // ===== ADMIN =====
@@ -1731,6 +1727,39 @@ function saveStatus() {
     renderAdmAgs();
     toast("Statut mis à jour !");
   });
+}
+
+// ===== EXPORT TEXTE (compatible Safari) =====
+function showTextExport(txt, title) {
+  // Compatible Safari - affichage dans la page
+  var overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:#1A1A1A;z-index:9999;display:flex;flex-direction:column;padding:0;";
+  var toolbar = document.createElement("div");
+  toolbar.style.cssText = "display:flex;gap:8px;padding:12px;background:#2C2C2C;border-bottom:2px solid #444;flex-shrink:0;";
+  toolbar.innerHTML = '<span style="color:#FAFAFA;font-weight:600;flex:1;font-size:14px">'+title+'</span>';
+  var copyBtn = document.createElement("button");
+  copyBtn.textContent = "Copier";
+  copyBtn.style.cssText = "background:#27AE60;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;";
+  copyBtn.onclick = function(){
+    ta.select();
+    document.execCommand("copy");
+    toast("Copié !");
+  };
+  var closeBtn = document.createElement("button");
+  closeBtn.textContent = "Fermer";
+  closeBtn.style.cssText = "background:#C0392B;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;";
+  closeBtn.onclick = function(){ document.body.removeChild(overlay); };
+  toolbar.appendChild(copyBtn);
+  toolbar.appendChild(closeBtn);
+  var ta = document.createElement("textarea");
+  ta.value = txt;
+  ta.style.cssText = "flex:1;background:#1A1A1A;color:#FAFAFA;border:none;padding:16px;font-family:monospace;font-size:12px;resize:none;outline:none;";
+  ta.readOnly = true;
+  overlay.appendChild(toolbar);
+  overlay.appendChild(ta);
+  document.body.appendChild(overlay);
+  ta.focus();
+  ta.select();
 }
 
 // Touch support pour tooltips mobile
