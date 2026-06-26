@@ -7,6 +7,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--rouge:#C0392B;--rouge-s:#96281B;--rouge-v:#E74C3C;--or:#F39C12;--blanc:#FAFAFA;--gris:#BDC3C7;--gris-s:#7F8C8D;--noir:#1A1A1A;--anth:#2C2C2C;--vert:#27AE60;--vert-c:#2ECC71;--bleu:#2980B9;}
+body.light{--noir:#F0F0F0;--anth:#FFFFFF;--blanc:#111111;--gris:#555;--gris-s:#888;--rouge-s:#8B1A0A;}
+body.light .tabs{background:#e8e8e8;border-bottom:2px solid #ccc;}
+body.light .tab{color:#555;}
+body.light select,body.light input[type=text],body.light input[type=password]{background:#fff;border-color:#ccc;color:#111;}
+body.light .wkb{background:#fff;border-color:#ccc;color:#555;}
+body.light .ccr{background:#f5f5f5;}
+body.light .agr{background:#f5f5f5;}
+body.light .af{background:#f5f5f5;}
+body.light .pa{background:#f5f5f5;}
+body.light .tooltip-box{background:#fff;border-color:#ccc;color:#111;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--noir);color:var(--blanc);min-height:100vh;}
 .hdr{background:var(--rouge-s);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--rouge-v);}
@@ -130,7 +140,10 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
     <div style="font-size:26px">🚒</div>
     <div><div class="hdr-t">Astreinte Weekend</div><div class="hdr-s">SDIS — Planification</div></div>
   </div>
-  <div class="badge" id="badge" onclick="logout()">Agent</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button id="themeBtn" onclick="toggleTheme()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 8px;border-radius:20px;font-size:14px;cursor:pointer;line-height:1">🌙</button>
+    <div class="badge" id="badge" onclick="logout()">Agent</div>
+  </div>
 </div>
 
 <div class="tabs">
@@ -154,7 +167,10 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
   </div>
   <div id="agForm" style="display:none">
     <div class="card">
-      <label class="lbl">Type de weekend</label>
+      <label class="lbl">Date du weekend</label>
+      <input type="date" id="wkDate" style="margin-bottom:10px;color-scheme:dark" onchange="onWkDateChange()">
+      <div id="wkDateLabel" style="font-size:12px;color:var(--or);margin-bottom:4px;display:none"></div>
+      <label class="lbl" style="margin-top:6px">Type de weekend</label>
       <div class="wkg">
         <button class="wkb on" onclick="selWk('we',this)">Weekend<br><small>Sam+Dim</small></button>
         <button class="wkb" onclick="selWk('pontVen',this)">Pont Ven.<br><small>Ven+Sam+Dim</small></button>
@@ -204,10 +220,14 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
       <button class="pl on" onclick="setFilter('tous',this)">Tous</button>
       <button class="pl" onclick="setFilter('dispos',this)">Disponibles</button>
     </div>
+    <div class="pf" id="qualFilterBar" style="margin-top:-4px"></div>
     <div id="rappelBar" style="margin-bottom:12px;display:none"></div>
     <div class="st">SÉLECTION PAR CRÉNEAU</div>
     <div id="agCards"></div>
-    <button class="btn btn-or" onclick="exportRecap()">📥 Exporter le récap</button>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-or" style="margin-bottom:0;flex:1" onclick="exportRecap()">📥 Exporter</button>
+      <button id="lockBtn" class="btn btn-rv" style="margin-bottom:0;flex:1" onclick="toggleLock()">🔒 Verrouiller</button>
+    </div>
     <button class="btn btn-rv" onclick="resetAll()">🗑 Réinitialiser</button>
   </div>
 </div>
@@ -331,6 +351,11 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
           <input type="text" id="newFonction" placeholder="Nouvelle fonction" style="margin-bottom:0;flex:1">
           <button class="btn-sm" style="background:var(--vert);color:white;white-space:nowrap" onclick="addFonction()">+ Ajouter</button>
         </div>
+      </div>
+      <div class="card">
+        <label class="lbl">Minimum d'agents requis par créneau</label>
+        <div style="font-size:12px;color:var(--gris-s);margin-bottom:12px">Le chef verra une alerte si un créneau est sous ce seuil</div>
+        <div id="minAgentsList"></div>
       </div>
     </div>
     <div id="tabHistorique" style="display:none">
@@ -576,6 +601,7 @@ function onAgChange() {
   CUR.agent = (DB.agents[CUR.eq]||[]).find(function(a){return a.id===val;});
   if (!CUR.agent) return;
   document.getElementById("agForm").style.display = "block";
+  updateLockUI();
   var d = DB.dispos[CUR.agent.id];
   if (d) {
     document.getElementById("globale").checked = d.dispoGlobale !== false;
@@ -584,6 +610,7 @@ function onAgChange() {
     document.querySelectorAll(".wkb").forEach(function(b){b.classList.remove("on");});
     document.querySelectorAll(".wkb")[wkMap[CUR.wk]].classList.add("on");
   }
+  if (CUR.agent) restoreWkDate(CUR.agent.id);
   renderCr();
 }
 
@@ -727,8 +754,28 @@ function renderCr() {
     remDiv.appendChild(remStart);
     remDiv.appendChild(remALabel);
     remDiv.appendChild(remEnd);
+    // Commentaire libre
+    var commentDiv = document.createElement("div");
+    commentDiv.style.cssText = "display:"+(checked?"flex":"none")+";align-items:center;gap:8px;padding:2px 0 8px 58px;";
+    var commentLabel = document.createElement("span");
+    commentLabel.style.cssText = "font-size:11px;color:#7F8C8D;white-space:nowrap";
+    commentLabel.textContent = "Note :";
+    var commentInput = document.createElement("input");
+    commentInput.type = "text";
+    commentInput.className = "ch-comment";
+    commentInput.dataset.j = j;
+    commentInput.placeholder = "Précision optionnelle...";
+    commentInput.value = (savedH[j] && savedH[j].comment) || "";
+    commentInput.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;font-family:inherit;flex:1;margin-bottom:0";
+    commentDiv.appendChild(commentLabel);
+    commentDiv.appendChild(commentInput);
+    // montrer/cacher le commentaire avec le toggle
+    chk.addEventListener("change", function() {
+      commentDiv.style.display = this.checked ? "flex" : "none";
+    });
     wrapper.appendChild(heuresDiv);
     wrapper.appendChild(remDiv);
+    wrapper.appendChild(commentDiv);
     list.appendChild(wrapper);
   });
 }
@@ -763,8 +810,13 @@ function submitDispo() {
     if(!heures[t.dataset.j]) heures[t.dataset.j]={};
     heures[t.dataset.j].remFin=t.value;
   });
+  document.querySelectorAll(".ch-comment").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].comment=t.value;
+  });
+  var wkDateVal = document.getElementById("wkDate").value || "";
   var data={agentId:CUR.agent.id,nom:CUR.agent.nom,grade:CUR.agent.grade,
-    fonction:CUR.agent.fonction,equipe:CUR.eq,
+    fonction:CUR.agent.fonction,equipe:CUR.eq,wkDate:wkDateVal,
     dispoGlobale:document.getElementById("globale").checked,
     wkType:CUR.wk,creneaux:crs,heures:heures,timestamp:new Date().toISOString()};
   DB.dispos[CUR.agent.id]=data;
@@ -782,7 +834,7 @@ function chefLogin() {
     document.getElementById("chefGate").style.display="none";
     document.getElementById("chefDash").style.display="block";
     document.getElementById("badge").textContent="Chef";
-    startPoll(); renderChef();
+    startPoll(); renderChef(); renderQualFilterBar(); updateLockUI();
   } else { document.getElementById("chefErr").style.display="block"; }
 }
 
@@ -802,15 +854,53 @@ function renderChef() {
   var eq = document.getElementById("chefEq").value;
   var jours = WK[wk];
   var ags = getAgs(eq);
+  // Filtre qualification
+  if (STATE_QUAL_FILTER) {
+    ags = ags.filter(function(a){ return a.qualifications && a.qualifications.indexOf(STATE_QUAL_FILTER) > -1; });
+  }
   var repondu = ags.filter(function(a){ return DB.dispos[a.id]; }).length;
   var selTotal = 0;
   ags.forEach(function(a){
     jours.forEach(function(j){ if((DB.sel[a.id]||{})[j]) selTotal++; });
   });
+  // Indicateur lock
+  var lockInd = getLocked() ? '<span style="font-size:10px;background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v);padding:2px 8px;border-radius:20px;margin-left:8px">🔒 Verrouillé</span>' : '';
+  // Trouver la date du weekend dans les dispos
+  var wkDateDisp = "";
+  Object.values(DB.dispos).forEach(function(d){ if(d && d.wkDate && !wkDateDisp) wkDateDisp=d.wkDate; });
+  var dateHtml = wkDateDisp ? '<div style="grid-column:1/-1;text-align:center;font-size:11px;color:var(--or);padding:4px 0;border-top:1px solid #333;margin-top:4px">📅 '+new Date(wkDateDisp+'T12:00:00').toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short",year:"numeric"})+'</div>' : '';
   document.getElementById("statsBar").innerHTML =
     '<div class="sbox"><div class="snum" style="color:var(--rouge-v)">'+ags.length+'</div><div class="slbl">Agents</div></div>'+
     '<div class="sbox"><div class="snum" style="color:var(--or)">'+repondu+'</div><div class="slbl">Ont répondu</div></div>'+
-    '<div class="sbox"><div class="snum" style="color:var(--vert-c)">'+selTotal+'</div><div class="slbl">Attribués</div></div>';
+    '<div class="sbox"><div class="snum" style="color:var(--vert-c)">'+selTotal+lockInd+'</div><div class="slbl">Attribués</div></div>'+
+    dateHtml;
+  renderQualFilterBar();
+  updateLockUI();
+
+  // Indicateurs minimum par créneau
+  var mins = (DB.params && DB.params.minAgents) || {};
+  var minBar = "";
+  jours.forEach(function(j){
+    if (!mins[j]) return;
+    var nbSel = ags.filter(function(a){ return (DB.sel[a.id]||{})[j]; }).length;
+    var st = getCreneauStatus(j, nbSel);
+    if (!st) return;
+    var c = CR[j];
+    minBar += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--anth);border-radius:8px;margin-bottom:5px;border-left:3px solid '+CLRS[c.c]+'">'+
+      '<span style="font-size:11px">'+c.l+'</span>'+
+      '<span style="font-size:11px;font-weight:700;color:'+st.color+'">'+st.icon+' '+st.txt+'</span>'+
+      '</div>';
+  });
+  if (minBar) {
+    var minDiv = document.getElementById("agCards").previousSibling;
+    var existing = document.getElementById("minBar");
+    if (existing) existing.remove();
+    var mb = document.createElement("div");
+    mb.id = "minBar"; mb.style.marginBottom="12px";
+    mb.innerHTML = '<div style="font-size:10px;color:var(--gris-s);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Remplissage</div>'+minBar;
+    var agCardsEl = document.getElementById("agCards");
+    agCardsEl.parentNode.insertBefore(mb, agCardsEl);
+  }
 
   var cont = document.getElementById("agCards");
   cont.innerHTML = "";
@@ -870,6 +960,7 @@ function renderChef() {
       var isSel = !!agSel[j];
       var agH = (d.heures && d.heures[j]) || {};
       var heuresStr = agH.debut && agH.fin ? agH.debut + " - " + agH.fin : c.h;
+      var commentStr = agH.comment ? '<div style="font-size:10px;color:#95A5A6;font-style:italic;margin-top:1px">💬 '+agH.comment+'</div>' : '';
 
       var row = document.createElement("div");
       row.className = "ccr" + (isSel ? " sel" : "") + (isDispo ? "" : " na");
@@ -892,7 +983,7 @@ function renderChef() {
       row.innerHTML =
         '<div class="ccrl">'+
         '<div class="ccrd '+c.c+'" style="color:'+CLRS[c.c]+'">'+c.l.substring(0,3).toUpperCase()+'</div>'+
-        '<div><div class="ccri">'+c.l+'</div><div class="ccrh">'+heuresStr+'</div>'+remHtml+'</div>'+
+        '<div><div class="ccri">'+c.l+'</div><div class="ccrh">'+heuresStr+'</div>'+commentStr+remHtml+'</div>'+
         '</div>'+
         '<div>'+(isSel?"✅":isDispo?"⬜":"🚫")+'</div>';
 
@@ -986,12 +1077,13 @@ function renderPlan(){
       var dA=DB.dispos[a.id]||{};
       var hA=(dA.heures&&dA.heures[j])||{};
       var hStr=hA.debut&&hA.fin?'<span style="color:#1ABC9C;font-size:10px;margin-left:6px">'+hA.debut+'-'+hA.fin+'</span>':'';
+      var cStr=hA.comment?'<div style="font-size:10px;color:#95A5A6;font-style:italic">💬 '+hA.comment+'</div>':'';
       var qTip="";
       if(a.qualifications&&a.qualifications.length){
         qTip='<div class="tooltip-box"><div style="color:var(--or);font-weight:600;margin-bottom:4px">Qualifications</div>'+
           a.qualifications.map(function(q){return'<div style="font-size:11px">• '+q+'</div>';}).join("")+'</div>';
       }
-      html+='<div class="pa">🧑‍🚒 <div style="flex:1"><div class="tooltip-wrap" style="display:inline">'+a.nom+qTip+hStr+'</div><div class="pag">'+a.grade+'</div></div></div>';
+      html+='<div class="pa">🧑‍🚒 <div style="flex:1"><div class="tooltip-wrap" style="display:inline">'+a.nom+qTip+hStr+'</div><div class="pag">'+a.grade+'</div>'+cStr+'</div></div>';
       // Afficher remplacant validé
       if(hA.remplacant && (DB.sel[a.id]||{})[j+"_rem"]){
         var remAg=null;
@@ -1795,6 +1887,7 @@ function renderParams() {
         fList.appendChild(row);
       });
     }
+    renderMinAgents();
   });
 }
 
@@ -1932,6 +2025,171 @@ function toast(msg){
   var t=document.getElementById("toast");
   t.textContent=msg; t.classList.add("on");
   setTimeout(function(){t.classList.remove("on");},2500);
+}
+
+// ===== THÈME CLAIR/SOMBRE =====
+var THEME = localStorage.getItem("theme") || "dark";
+function applyTheme() {
+  document.body.classList.toggle("light", THEME === "light");
+  var btn = document.getElementById("themeBtn");
+  if (btn) btn.textContent = THEME === "light" ? "🌙" : "☀️";
+}
+function toggleTheme() {
+  THEME = THEME === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", THEME);
+  applyTheme();
+}
+applyTheme();
+
+// ===== DATE DU WEEKEND =====
+function onWkDateChange() {
+  var d = document.getElementById("wkDate").value;
+  var lbl = document.getElementById("wkDateLabel");
+  if (!d) { lbl.style.display="none"; return; }
+  var dt = new Date(d + "T12:00:00");
+  var options = {weekday:"long", day:"numeric", month:"long", year:"numeric"};
+  lbl.textContent = "📅 " + dt.toLocaleDateString("fr-FR", options);
+  lbl.style.display = "block";
+}
+
+// Restaurer la date sauvegardée quand l'agent charge ses dispos
+function restoreWkDate(agentId) {
+  var d = DB.dispos[agentId];
+  var inp = document.getElementById("wkDate");
+  if (d && d.wkDate && inp) {
+    inp.value = d.wkDate;
+    onWkDateChange();
+  }
+}
+
+// ===== VERROUILLAGE PLANNING =====
+function getLocked() { return !!(DB.params && DB.params.locked); }
+
+function toggleLock() {
+  if (!STATE.chef) return;
+  var locked = getLocked();
+  if (!locked) {
+    if (!confirm("Verrouiller le planning ? Les agents ne pourront plus modifier leurs disponibilités.")) return;
+  } else {
+    if (!confirm("Déverrouiller le planning ?")) return;
+  }
+  DB.params.locked = !locked;
+  sbSet("params", DB.params).then(function(){
+    updateLockUI();
+    toast(DB.params.locked ? "🔒 Planning verrouillé" : "🔓 Planning déverrouillé");
+  });
+}
+
+function updateLockUI() {
+  var locked = getLocked();
+  var btn = document.getElementById("lockBtn");
+  if (btn) {
+    btn.textContent = locked ? "🔓 Déverrouiller" : "🔒 Verrouiller";
+    btn.style.borderColor = locked ? "var(--vert)" : "var(--rouge-v)";
+    btn.style.color = locked ? "var(--vert-c)" : "var(--rouge-v)";
+  }
+  // Bannière verrouillage dans vue agent
+  var agForm = document.getElementById("agForm");
+  var existBanner = document.getElementById("lockBanner");
+  if (locked && agForm && !existBanner) {
+    var banner = document.createElement("div");
+    banner.id = "lockBanner";
+    banner.style.cssText = "background:rgba(231,76,60,0.15);border:1px solid var(--rouge-v);border-radius:10px;padding:12px;text-align:center;color:var(--rouge-v);font-weight:600;margin-bottom:12px;font-size:13px";
+    banner.textContent = "🔒 Le planning est verrouillé. Les modifications ne sont plus acceptées.";
+    agForm.insertBefore(banner, agForm.firstChild);
+  } else if (!locked && existBanner) {
+    existBanner.remove();
+  }
+  // Désactiver le bouton envoyer si verrouillé
+  var sendBtn = document.querySelector(".btn-r[onclick='submitDispo()']");
+  if (sendBtn) {
+    sendBtn.disabled = locked;
+    sendBtn.style.opacity = locked ? "0.4" : "1";
+  }
+}
+
+// ===== FILTRE PAR QUALIFICATION =====
+var STATE_QUAL_FILTER = "";
+
+function renderQualFilterBar() {
+  var bar = document.getElementById("qualFilterBar");
+  if (!bar) return;
+  var quals = (DB.params && DB.params.qualifications) || [];
+  bar.innerHTML = '';
+  if (!quals.length) return;
+  var allBtn = document.createElement("button");
+  allBtn.className = "pl" + (!STATE_QUAL_FILTER ? " on" : "");
+  allBtn.style.borderColor = !STATE_QUAL_FILTER ? "" : "#2980B9";
+  allBtn.textContent = "Toutes quals";
+  allBtn.onclick = function(){ STATE_QUAL_FILTER=""; renderQualFilterBar(); renderChef(); };
+  bar.appendChild(allBtn);
+  quals.forEach(function(q){
+    var btn = document.createElement("button");
+    btn.className = "pl" + (STATE_QUAL_FILTER===q ? " on" : "");
+    btn.style.borderColor = STATE_QUAL_FILTER===q ? "" : "#2980B9";
+    btn.style.color = STATE_QUAL_FILTER===q ? "" : "#5DADE2";
+    btn.textContent = q;
+    btn.onclick = function(){ STATE_QUAL_FILTER = STATE_QUAL_FILTER===q ? "" : q; renderQualFilterBar(); renderChef(); };
+    bar.appendChild(btn);
+  });
+}
+
+// ===== MINIMUM D'AGENTS PAR CRÉNEAU =====
+function renderMinAgents() {
+  var cont = document.getElementById("minAgentsList");
+  if (!cont) return;
+  var mins = (DB.params && DB.params.minAgents) || {};
+  cont.innerHTML = "";
+  Object.keys(CR).forEach(function(j){
+    var c = CR[j];
+    var val = mins[j] || 0;
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333";
+    var lbl = document.createElement("div");
+    lbl.style.cssText = "font-size:12px;font-weight:500;color:"+CLRS[c.c];
+    lbl.textContent = c.l;
+    var ctrl = document.createElement("div");
+    ctrl.style.cssText = "display:flex;align-items:center;gap:8px";
+    var btnM = document.createElement("button");
+    btnM.textContent = "−";
+    btnM.style.cssText = "background:#444;border:none;color:white;width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px";
+    btnM.setAttribute("data-j", j);
+    btnM.onclick = function(){ adjustMin(this.getAttribute("data-j"), -1); };
+    var span = document.createElement("span");
+    span.id = "min_"+j;
+    span.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--or);min-width:24px;text-align:center";
+    span.textContent = val;
+    var btnP = document.createElement("button");
+    btnP.textContent = "+";
+    btnP.style.cssText = "background:#444;border:none;color:white;width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px";
+    btnP.setAttribute("data-j", j);
+    btnP.onclick = function(){ adjustMin(this.getAttribute("data-j"), 1); };
+    ctrl.appendChild(btnM); ctrl.appendChild(span); ctrl.appendChild(btnP);
+    row.appendChild(lbl); row.appendChild(ctrl);
+    cont.appendChild(row);
+  });
+}
+
+
+function adjustMin(j, delta) {
+  if (!DB.params.minAgents) DB.params.minAgents = {};
+  var cur = DB.params.minAgents[j] || 0;
+  var nv = Math.max(0, cur + delta);
+  DB.params.minAgents[j] = nv;
+  sbSet("params", DB.params).then(function(){
+    var el = document.getElementById("min_"+j);
+    if (el) el.textContent = nv;
+    toast("Min. mis à jour");
+  });
+}
+
+// Indicateur de remplissage par créneau
+function getCreneauStatus(j, nbSel) {
+  var min = (DB.params && DB.params.minAgents && DB.params.minAgents[j]) || 0;
+  if (min === 0) return null;
+  if (nbSel >= min) return {color:"var(--vert-c)", icon:"✅", txt: nbSel+"/"+min};
+  if (nbSel >= Math.ceil(min * 0.6)) return {color:"var(--or)", icon:"⚠️", txt: nbSel+"/"+min};
+  return {color:"var(--rouge-v)", icon:"🔴", txt: nbSel+"/"+min};
 }
 </script>
 </body>
