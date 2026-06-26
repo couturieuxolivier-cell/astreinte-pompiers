@@ -148,8 +148,6 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
     <label class="lbl">Mon équipe</label>
     <select id="selEq" onchange="onEqChange()" style="margin-bottom:10px">
       <option value="">-- Sélectionner mon équipe --</option>
-      <option value="1">Équipe 1</option><option value="2">Équipe 2</option>
-      <option value="3">Équipe 3</option><option value="4">Équipe 4</option>
     </select>
     <label class="lbl" style="margin-top:6px">Je suis</label>
     <select id="selAg" onchange="onAgChange()"><option value="">-- Sélectionner mon nom --</option></select>
@@ -194,8 +192,6 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
       <label class="lbl">Équipe</label>
       <select id="chefEq" onchange="renderChef()" style="margin-bottom:10px">
         <option value="all">Toutes les équipes</option>
-        <option value="1">Équipe 1</option><option value="2">Équipe 2</option>
-        <option value="3">Équipe 3</option><option value="4">Équipe 4</option>
       </select>
       <label class="lbl">Type de weekend</label>
       <select id="chefWk" onchange="renderChef()">
@@ -231,8 +227,6 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
       <label class="lbl">Équipe</label>
       <select id="planEq" onchange="renderPlan()" style="margin-bottom:10px">
         <option value="all">Toutes les équipes</option>
-        <option value="1">Équipe 1</option><option value="2">Équipe 2</option>
-        <option value="3">Équipe 3</option><option value="4">Équipe 4</option>
       </select>
       <label class="lbl">Type de weekend</label>
       <select id="planWk" onchange="renderPlan()">
@@ -301,11 +295,23 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
   <div id="adminDash" style="display:none">
     <div class="atabs">
       <button class="atab on" onclick="admTab('agents',this)">👥 Agents</button>
+      <button class="atab" onclick="admTab('equipes',this)">🏷️ Équipes</button>
       <button class="atab" onclick="admTab('codes',this)">🔑 Codes</button>
       <button class="atab" onclick="admTab('historique',this)">📚 Historique</button>
       <button class="atab" onclick="admTab('params',this)">⚙️ Paramètres</button>
     </div>
     <div id="tabAgents"><div id="eqList"></div></div>
+    <div id="tabEquipes" style="display:none">
+      <div class="card">
+        <label class="lbl">Gérer les équipes</label>
+        <div style="font-size:12px;color:var(--gris-s);margin-bottom:12px">Créez, renommez ou supprimez des équipes. Les équipes 1 à 4 sont les équipes de base.</div>
+        <div id="equipeList" style="margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="newEquipeName" placeholder="Nom de la nouvelle équipe (ex: Réserve)" style="margin-bottom:0;flex:1">
+          <button class="btn-sm" style="background:var(--vert);color:white;white-space:nowrap;padding:8px 12px" onclick="addEquipe()">+ Créer</button>
+        </div>
+      </div>
+    </div>
     <div id="tabCodes" style="display:none">
       <div class="card"><label class="lbl">Codes d'accès</label><div id="codeList"></div></div>
     </div>
@@ -365,8 +371,6 @@ select,input[type=text],input[type=password]{width:100%;background:var(--noir);b
     <div id="mvNom" style="font-weight:600;color:var(--or);margin-bottom:12px"></div>
     <label class="lbl">Vers l'équipe</label>
     <select id="mvTo" style="margin-bottom:12px">
-      <option value="1">Équipe 1</option><option value="2">Équipe 2</option>
-      <option value="3">Équipe 3</option><option value="4">Équipe 4</option>
     </select>
     <div style="display:flex;gap:8px">
       <button class="btn btn-r" style="margin-bottom:0" onclick="confirmMove()">Déplacer</button>
@@ -421,6 +425,19 @@ function loadAll(cb) {
       DB.dispos = res[2] || {};
       DB.sel = res[3] || {};
       DB.params = res[4] || {qualifications: DEFAULT_QUALS.slice(), fonctions: DEFAULT_FONCTIONS.slice()};
+      // Équipes : initialiser depuis les clés de DB.agents si pas encore dans params
+      if (!DB.params.equipes) {
+        DB.params.equipes = Object.keys(DB.agents).map(function(k) {
+          return {id: k, nom: "Équipe " + k};
+        });
+        if (!DB.params.equipes.length) {
+          DB.params.equipes = [{id:"1",nom:"Équipe 1"},{id:"2",nom:"Équipe 2"},{id:"3",nom:"Équipe 3"},{id:"4",nom:"Équipe 4"}];
+        }
+      }
+      // S'assurer que DB.agents a une entrée pour chaque équipe
+      DB.params.equipes.forEach(function(eq) {
+        if (!DB.agents[eq.id]) DB.agents[eq.id] = [];
+      });
       if (cb) cb();
     });
 }
@@ -452,6 +469,7 @@ var CLRS = {ven:"#9B59B6",sam:"#E74C3C",dim:"#F39C12",lun:"#1ABC9C"};
 // Init
 loadAll(function() {
   getParams(function(){});
+  populateEqSelects();
   toast("Connecté ✅");
 });
 
@@ -461,10 +479,62 @@ function startPoll() {
   if (pollT) return;
   pollT = setInterval(function() {
     loadAll(function() {
+      populateEqSelects();
       if (STATE.chef) renderChef();
       if (STATE.plan) renderPlan();
     });
   }, 6000);
+}
+
+// ===== ÉQUIPES DYNAMIQUES =====
+function getEquipes() {
+  return (DB.params && DB.params.equipes) || [{id:"1",nom:"Équipe 1"},{id:"2",nom:"Équipe 2"},{id:"3",nom:"Équipe 3"},{id:"4",nom:"Équipe 4"}];
+}
+
+function allEqIds() {
+  return getEquipes().map(function(e){ return e.id; });
+}
+
+function findAgentById(agId) {
+  var found = null;
+  allEqIds().forEach(function(eqId){ (DB.agents[eqId]||[]).forEach(function(a){ if(a.id===agId) found=a; }); });
+  return found;
+}
+
+function populateEqSelects() {
+  var eqs = getEquipes();
+  // Agent select
+  var selEq = document.getElementById("selEq");
+  if (selEq) {
+    var cur = selEq.value;
+    selEq.innerHTML = '<option value="">-- Sélectionner mon équipe --</option>';
+    eqs.forEach(function(eq){ selEq.innerHTML += '<option value="'+eq.id+'"'+(cur===eq.id?' selected':'')+'>'+eq.nom+'</option>'; });
+  }
+  // Chef select
+  var chefEq = document.getElementById("chefEq");
+  if (chefEq) {
+    var cur2 = chefEq.value;
+    chefEq.innerHTML = '<option value="all">Toutes les équipes</option>';
+    eqs.forEach(function(eq){ chefEq.innerHTML += '<option value="'+eq.id+'"'+(cur2===eq.id?' selected':'')+'>'+eq.nom+'</option>'; });
+  }
+  // Plan select
+  var planEq = document.getElementById("planEq");
+  if (planEq) {
+    var cur3 = planEq.value;
+    planEq.innerHTML = '<option value="all">Toutes les équipes</option>';
+    eqs.forEach(function(eq){ planEq.innerHTML += '<option value="'+eq.id+'"'+(cur3===eq.id?' selected':'')+'>'+eq.nom+'</option>'; });
+  }
+  // Move modal select
+  var mvTo = document.getElementById("mvTo");
+  if (mvTo) {
+    mvTo.innerHTML = '';
+    eqs.forEach(function(eq){ mvTo.innerHTML += '<option value="'+eq.id+'">'+eq.nom+'</option>'; });
+  }
+}
+
+function getEqNom(id) {
+  var found = getEquipes().find(function(e){ return e.id === id; });
+  return found ? found.nom : "Équipe "+id;
 }
 
 function showTab(v) {
@@ -621,7 +691,7 @@ function renderCr() {
     defaultOpt.textContent = "-- Aucun --";
     remSelect.appendChild(defaultOpt);
     var allAgents = [];
-    ["1","2","3","4"].forEach(function(eq) {
+    allEqIds().forEach(function(eq) {
       (DB.agents[eq]||[]).forEach(function(a) {
         if(!CUR.agent || a.id !== CUR.agent.id) allAgents.push(a);
       });
@@ -717,9 +787,10 @@ function chefLogin() {
 }
 
 function getAgs(eq) {
+  var eqs = getEquipes();
   if (eq==="all") {
     var all=[];
-    ["1","2","3","4"].forEach(function(e){(DB.agents[e]||[]).forEach(function(a){all.push(Object.assign({},a,{equipe:e}));});});
+    eqs.forEach(function(e){(DB.agents[e.id]||[]).forEach(function(a){all.push(Object.assign({},a,{equipe:e.id}));});});
     return all;
   }
   return (DB.agents[eq]||[]).map(function(a){return Object.assign({},a,{equipe:eq});});
@@ -784,7 +855,7 @@ function renderChef() {
         '</div>';
     }
     hdr.innerHTML =
-      '<div class="tooltip-wrap"><div class="acn">'+ag.nom+qualTip+'</div><div class="acg">'+ag.grade+(eq==="all"?" · Eq."+ag.equipe:"")+'</div></div>'+
+      '<div class="tooltip-wrap"><div class="acn">'+ag.nom+qualTip+'</div><div class="acg">'+ag.grade+(eq==="all"?" · "+getEqNom(ag.equipe):"")+'</div></div>'+
       '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
       '<span class="db '+sc+'">'+sl+'</span>'+
       (nbSel > 0 ? '<span style="font-size:10px;color:var(--vert-c)">'+nbSel+' attribué'+(nbSel>1?"s":"")+'</span>' : '')+
@@ -807,7 +878,7 @@ function renderChef() {
       var remHtml = "";
       if (agH.remplacant) {
         var remAg = null;
-        ["1","2","3","4"].forEach(function(e){ (DB.agents[e]||[]).forEach(function(a){ if(a.id===agH.remplacant) remAg=a; }); });
+        remAg = findAgentById(agH.remplacant);
         if (remAg) {
           var remVal = !!(DB.sel[ag.id]||{})[j+"_rem"];
           var rHstr = agH.remDebut && agH.remFin ? " ("+agH.remDebut+"-"+agH.remFin+")" : "";
@@ -881,7 +952,7 @@ function exportRecap(){
       txt+="  - "+a.nom+" ("+a.grade+")"+hStr+"\n";
       if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
         var remAg=null;
-        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
+        remAg = findAgentById(hA.remplacant);
         if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="    > Remplacant: "+remAg.nom+rStr+"\n";}
       }
     });
@@ -924,7 +995,7 @@ function renderPlan(){
       // Afficher remplacant validé
       if(hA.remplacant && (DB.sel[a.id]||{})[j+"_rem"]){
         var remAg=null;
-        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
+        remAg = findAgentById(hA.remplacant);
         if(remAg){
           var rStr=hA.remDebut&&hA.remFin?'<span style="color:#1ABC9C;font-size:10px;margin-left:6px">'+hA.remDebut+'-'+hA.remFin+'</span>':'';
           html+='<div class="pa" style="background:rgba(243,156,18,0.08);border-left:2px solid #F39C12">'+
@@ -954,7 +1025,7 @@ function sharePlan(){
       txt+="  - "+a.nom+hStr+"\n";
       if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
         var remAg=null;
-        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
+        remAg = findAgentById(hA.remplacant);
         if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="  - "+remAg.nom+rStr+" (remplacant)\n";}
       }
     });
@@ -979,7 +1050,7 @@ function exportPlan(){
       txt+="  - "+a.nom+" ("+a.grade+")"+hStr+"\n";
       if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
         var remAg=null;
-        ["1","2","3","4"].forEach(function(eq){(DB.agents[eq]||[]).forEach(function(ag){if(ag.id===hA.remplacant)remAg=ag;});});
+        remAg = findAgentById(hA.remplacant);
         if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="    > Remplacant: "+remAg.nom+rStr+"\n";}
       }
     });
@@ -1003,11 +1074,95 @@ function admTab(tab,btn){
   document.querySelectorAll(".atab").forEach(function(t){t.classList.remove("on");});
   btn.classList.add("on");
   document.getElementById("tabAgents").style.display=tab==="agents"?"":"none";
+  document.getElementById("tabEquipes").style.display=tab==="equipes"?"":"none";
   document.getElementById("tabCodes").style.display=tab==="codes"?"":"none";
   document.getElementById("tabHistorique").style.display=tab==="historique"?"":"none";
   document.getElementById("tabParams").style.display=tab==="params"?"":"none";
   if(tab==="historique") renderHistorique();
   if(tab==="params") renderParams();
+  if(tab==="equipes") renderEquipes();
+}
+
+// ===== GESTION ÉQUIPES =====
+function renderEquipes() {
+  var cont = document.getElementById("equipeList");
+  if (!cont) return;
+  var eqs = getEquipes();
+  cont.innerHTML = "";
+  eqs.forEach(function(eq, i) {
+    var nb = (DB.agents[eq.id]||[]).length;
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--noir);border-radius:8px;padding:10px 12px;";
+    row.innerHTML =
+      '<div style="flex:1">'+
+        '<div style="font-size:14px;font-weight:600">'+eq.nom+'</div>'+
+        '<div style="font-size:10px;color:var(--gris-s);margin-top:2px">'+nb+' agent'+(nb>1?'s':'')+'</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px">'+
+        '<button class="bsm" style="background:rgba(243,156,18,0.15);color:var(--or);border:1px solid var(--or)" data-id="'+eq.id+'" data-nom="'+eq.nom+'" onclick="renameEquipe(this.dataset.id,this.dataset.nom)">Renommer</button>'+
+        (nb===0 ?
+          '<button class="bsm" style="background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v)" data-id="'+eq.id+'" onclick="deleteEquipe(this.dataset.id)">Suppr.</button>'
+          : '<span style="font-size:10px;color:var(--gris-s);padding:4px 6px">non vide</span>'
+        )+
+      '</div>';
+    cont.appendChild(row);
+  });
+  if (!eqs.length) cont.innerHTML = '<div style="color:var(--gris-s);font-size:12px;padding:8px 0">Aucune équipe</div>';
+}
+
+function addEquipe() {
+  var nomInput = document.getElementById("newEquipeName");
+  var nom = nomInput.value.trim();
+  if (!nom) { toast("Entrer un nom pour l'équipe"); return; }
+  var eqs = getEquipes();
+  // Vérifier unicité du nom
+  if (eqs.find(function(e){ return e.nom.toLowerCase()===nom.toLowerCase(); })) {
+    toast("Une équipe avec ce nom existe déjà"); return;
+  }
+  var newId = "eq_" + Date.now();
+  eqs.push({id: newId, nom: nom});
+  DB.params.equipes = eqs;
+  DB.agents[newId] = [];
+  Promise.all([sbSet("params", DB.params), sbSet("agents", DB.agents)]).then(function(){
+    nomInput.value = "";
+    populateEqSelects();
+    renderEquipes();
+    renderAdmAgs();
+    toast("Équipe \""+nom+"\" créée !");
+  });
+}
+
+function renameEquipe(id, oldNom) {
+  var newNom = prompt("Nouveau nom pour l'équipe :", oldNom);
+  if (!newNom || newNom.trim() === oldNom) return;
+  newNom = newNom.trim();
+  var eqs = getEquipes();
+  if (eqs.find(function(e){ return e.nom.toLowerCase()===newNom.toLowerCase() && e.id!==id; })) {
+    toast("Une équipe avec ce nom existe déjà"); return;
+  }
+  eqs.forEach(function(e){ if(e.id===id) e.nom=newNom; });
+  DB.params.equipes = eqs;
+  sbSet("params", DB.params).then(function(){
+    populateEqSelects();
+    renderEquipes();
+    renderAdmAgs();
+    toast("Équipe renommée !");
+  });
+}
+
+function deleteEquipe(id) {
+  var nb = (DB.agents[id]||[]).length;
+  if (nb > 0) { toast("Supprimer d'abord les agents de cette équipe"); return; }
+  if (!confirm("Supprimer cette équipe ?")) return;
+  var eqs = getEquipes().filter(function(e){ return e.id!==id; });
+  DB.params.equipes = eqs;
+  delete DB.agents[id];
+  Promise.all([sbSet("params", DB.params), sbSet("agents", DB.agents)]).then(function(){
+    populateEqSelects();
+    renderEquipes();
+    renderAdmAgs();
+    toast("Équipe supprimée");
+  });
 }
 
 function renderAdmAgs() {
@@ -1019,12 +1174,13 @@ function _renderAdmAgs() {
   if(!STATE.admin) return;
   var cont = document.getElementById("eqList");
   cont.innerHTML = "";
-  var QUALS = ["PL","VSAV","Chef agres","Chef garde","Prompt secours","Secouriste","FDF","GRIMP","NRBC"];
-  ["1","2","3","4"].forEach(function(eq) {
+  var eqs = getEquipes();
+  eqs.forEach(function(eqObj) {
+    var eq = eqObj.id;
     var ags = DB.agents[eq] || [];
     var sec = document.createElement("div"); sec.className = "eqs";
     var hdr = document.createElement("div"); hdr.className = "eqh";
-    hdr.innerHTML = '<div class="eqt">Equipe '+eq+'</div><div style="font-size:11px;color:var(--gris-s)">'+ags.length+' agent'+(ags.length>1?"s":"")+'</div>';
+    hdr.innerHTML = '<div class="eqt">'+eqObj.nom+'</div><div style="font-size:11px;color:var(--gris-s)">'+ags.length+' agent'+(ags.length>1?"s":"")+'</div>';
     sec.appendChild(hdr);
     if(!ags.length){
       var e=document.createElement("div"); e.style="color:var(--gris-s);font-size:12px;padding:6px 0"; e.textContent="Aucun agent"; sec.appendChild(e);
@@ -1074,7 +1230,7 @@ function _renderAdmAgs() {
     var qualChecksNew = dynQuals.map(function(q){
       return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;margin:3px 6px 3px 0"><input type="checkbox" class="nq nq_new_'+eq+'" value="'+q+'"> '+q+'</label>';
     }).join("");
-    formDiv.innerHTML = '<label class="lbl" style="margin-bottom:8px">Nouveau membre - Equipe '+eq+'</label>'+
+    formDiv.innerHTML = '<label class="lbl" style="margin-bottom:8px">Nouveau membre - '+eqObj.nom+'</label>'+
       '<input type="text" id="nn_'+eq+'" placeholder="Nom Prénom">'+
       '<div class="f2">'+
       '<select id="ng_'+eq+'"><option value="">Grade</option>'+
@@ -1153,6 +1309,7 @@ function delAg(id,eq){
 function openMove(id,eq,nom){
   MOVE.id=id; MOVE.eq=eq;
   document.getElementById("mvNom").textContent=nom;
+  populateEqSelects();
   var opts=document.getElementById("mvTo");
   Array.from(opts.options).forEach(function(o){o.disabled=(o.value===eq);});
   document.getElementById("mvModal").classList.add("on");
@@ -1247,7 +1404,7 @@ function exportPDF(){
         // Remplacant dans PDF
         if (hA.remplacant && (DB.sel[a.id]||{})[j+"_rem"]) {
           var remAg = null;
-          ["1","2","3","4"].forEach(function(eq){ (DB.agents[eq]||[]).forEach(function(ag){ if(ag.id===hA.remplacant) remAg=ag; }); });
+          remAg = findAgentById(hA.remplacant);
           if (remAg) {
             var rStr = hA.remDebut && hA.remFin ? hA.remDebut + " - " + hA.remFin : "";
             var remInit = remAg.nom.split(" ").map(function(n){return n[0];}).join("").substring(0,2).toUpperCase();
@@ -1361,10 +1518,10 @@ function renderStats(){
 
   // Stats par agent
   var agStats='<div class="card"><label class="lbl">Détail par agent</label>';
-  ["1","2","3","4"].forEach(function(eq){
+  allEqIds().forEach(function(eq){
     var ags=DB.agents[eq]||[];
     if(!ags.length) return;
-    agStats+='<div style="font-family:Bebas Neue,sans-serif;font-size:16px;color:var(--or);margin:10px 0 6px">Équipe '+eq+'</div>';
+    agStats+='<div style="font-family:Bebas Neue,sans-serif;font-size:16px;color:var(--or);margin:10px 0 6px">'+getEqNom(eq)+'</div>';
     ags.forEach(function(a){
       var d=DB.dispos[a.id];
       var hasRepondu=!!d;
@@ -1518,7 +1675,7 @@ function renderHistorique() {
     cont.innerHTML = "";
     histo.forEach(function(h, idx) {
       var allAgs = [];
-      ["1","2","3","4"].forEach(function(eq){ Object.values(h.agents[eq]||[]).forEach(function(a){ allAgs.push(a); }); });
+      allEqIds().forEach(function(eq){ Object.values(h.agents[eq]||[]).forEach(function(a){ allAgs.push(a); }); });
       var selCount = 0;
       allAgs.forEach(function(a){ Object.values(h.selections[a.id]||{}).forEach(function(v){ if(v) selCount++; }); });
       var card = document.createElement("div");
@@ -1546,7 +1703,7 @@ function voirHistorique(idx) {
   if (detail.style.display !== "none") { detail.style.display = "none"; return; }
   var jours = WK[h.wkType||"we"];
   var allAgs = [];
-  ["1","2","3","4"].forEach(function(eq){ (h.agents[eq]||[]).forEach(function(a){ allAgs.push(Object.assign({},a,{equipe:eq})); }); });
+  allEqIds().forEach(function(eq){ (h.agents[eq]||[]).forEach(function(a){ allAgs.push(Object.assign({},a,{equipe:eq})); }); });
   var html = "";
   jours.forEach(function(j) {
     var c = CR[j];
@@ -1566,7 +1723,7 @@ function renderCompteurInStats() {
     if (!histo || !histo.length) return;
     var compteur = {};
     var allAgs = [];
-    ["1","2","3","4"].forEach(function(eq){ (DB.agents[eq]||[]).forEach(function(a){ allAgs.push(Object.assign({},a,{equipe:eq})); }); });
+    allEqIds().forEach(function(eq){ (DB.agents[eq]||[]).forEach(function(a){ allAgs.push(Object.assign({},a,{equipe:eq})); }); });
     allAgs.forEach(function(a){ compteur[a.id] = {agent:a, count:0}; });
     histo.forEach(function(h){
       allAgs.forEach(function(a){
