@@ -1,0 +1,2290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Astreinte — Pompiers</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--rouge:#C0392B;--rouge-s:#96281B;--rouge-v:#E74C3C;--or:#F39C12;--blanc:#FAFAFA;--gris:#BDC3C7;--gris-s:#7F8C8D;--noir:#1A1A1A;--anth:#2C2C2C;--vert:#27AE60;--vert-c:#2ECC71;--bleu:#2980B9;}
+body.light{--noir:#F0F0F0;--anth:#FFFFFF;--blanc:#111111;--gris:#555;--gris-s:#888;--rouge-s:#8B1A0A;}
+body.light .tabs{background:#e8e8e8;border-bottom:2px solid #ccc;}
+body.light .tab{color:#555;}
+body.light select,body.light input[type=text],body.light input[type=password]{background:#fff;border-color:#ccc;color:#111;}
+body.light .wkb{background:#fff;border-color:#ccc;color:#555;}
+body.light .ccr{background:#f5f5f5;}
+body.light .agr{background:#f5f5f5;}
+body.light .af{background:#f5f5f5;}
+body.light .pa{background:#f5f5f5;}
+body.light .tooltip-box{background:#fff;border-color:#ccc;color:#111;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--noir);color:var(--blanc);min-height:100vh;}
+.hdr{background:var(--rouge-s);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--rouge-v);}
+.hdr-l{display:flex;align-items:center;gap:10px;}
+.hdr-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;}
+.hdr-s{font-size:10px;color:rgba(255,255,255,0.6);margin-top:1px;}
+.badge{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;}
+.tabs{display:flex;background:var(--anth);border-bottom:2px solid #333;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:1;min-width:70px;padding:10px 6px;text-align:center;font-size:10px;font-weight:600;color:var(--gris);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;}
+.tab.on{color:var(--rouge-v);border-bottom-color:var(--rouge-v);}
+.ti{display:block;font-size:15px;margin-bottom:2px;}
+.vw{display:none;padding:14px;}
+.vw.on{display:block;}
+.card{background:var(--anth);border-radius:12px;padding:14px;margin-bottom:14px;}
+.lbl{font-size:10px;color:var(--gris-s);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:block;}
+select,input[type=text],input[type=password]{width:100%;background:var(--noir);border:1px solid #444;color:var(--blanc);padding:11px;border-radius:8px;font-size:14px;font-family:inherit;appearance:none;margin-bottom:0;}
+.wkg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.wkb{background:var(--noir);border:2px solid #444;color:var(--gris);padding:9px 6px;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;text-align:center;font-family:inherit;}
+.wkb.on{border-color:var(--rouge-v);color:var(--rouge-v);background:rgba(231,76,60,0.1);}
+.cri{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #333;}
+.cri:last-child{border-bottom:none;}
+.crd{font-family:'Bebas Neue',sans-serif;font-size:14px;width:48px;}
+.crd.ven{color:#9B59B6;}.crd.sam{color:var(--rouge-v);}.crd.dim{color:var(--or);}.crd.lun{color:#1ABC9C;}.crd.mar{color:#3498DB;}.crd.mer{color:#27AE60;}.crd.jeu{color:#E84393;}
+.crinf{flex:1;padding:0 10px;}
+.crl{font-size:13px;font-weight:500;}
+.crh{font-size:10px;color:var(--gris-s);margin-top:1px;}
+.tgl{position:relative;width:46px;height:24px;cursor:pointer;flex-shrink:0;}
+.tgl input{opacity:0;width:0;height:0;position:absolute;}
+.tgl-s{position:absolute;inset:0;background:#444;border-radius:24px;transition:0.3s;}
+.tgl-s:before{content:'';position:absolute;width:18px;height:18px;background:white;border-radius:50%;top:3px;left:3px;transition:0.3s;}
+.tgl input:checked+.tgl-s{background:var(--vert);}
+.tgl input:checked+.tgl-s:before{transform:translateX(22px);}
+.btn{width:100%;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px;}
+.btn-r{background:var(--rouge);color:white;}
+.btn-or{background:transparent;border:2px solid var(--or);color:var(--or);}
+.btn-vt{background:transparent;border:2px solid var(--vert);color:var(--vert-c);}
+.btn-rv{background:transparent;border:2px solid var(--rouge-v);color:var(--rouge-v);}
+.btn-bl{background:transparent;border:2px solid var(--bleu);color:#5DADE2;}
+.bsm{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;border:none;width:auto;}
+.ok{display:none;background:rgba(39,174,96,0.15);border:1px solid var(--vert);border-radius:10px;padding:14px;text-align:center;color:var(--vert-c);font-weight:600;margin-bottom:12px;}
+.sbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.sbox{background:var(--anth);border-radius:10px;padding:11px;text-align:center;}
+.snum{font-family:'Bebas Neue',sans-serif;font-size:26px;}
+.slbl{font-size:9px;color:var(--gris-s);margin-top:1px;}
+.ac{background:var(--anth);border-radius:12px;padding:13px;margin-bottom:10px;border-left:4px solid #444;}
+.ac.hd{border-left-color:var(--or);}
+.ac.nd{opacity:0.5;}
+.ach{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.acn{font-weight:600;font-size:14px;}
+.acg{font-size:10px;color:var(--or);margin-top:2px;}
+.db{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:700;white-space:nowrap;}
+.db-o{background:rgba(39,174,96,0.2);color:var(--vert-c);border:1px solid var(--vert);}
+.db-n{background:rgba(192,57,43,0.2);color:#E59866;border:1px solid var(--rouge);}
+.db-p{background:rgba(243,156,18,0.2);color:var(--or);border:1px solid var(--or);}
+.ccr{display:flex;align-items:center;justify-content:space-between;background:var(--noir);border-radius:8px;padding:7px 10px;border:2px solid transparent;cursor:pointer;margin-bottom:5px;transition:border-color 0.2s;}
+.ccr.sel{border-color:var(--vert);background:rgba(39,174,96,0.08);}
+.ccr.na{opacity:0.3;pointer-events:none;}
+.ccrl{display:flex;align-items:center;gap:8px;}
+.ccrd{font-family:'Bebas Neue',sans-serif;font-size:13px;width:42px;}
+.ccri{font-size:11px;font-weight:500;}
+.ccrh{font-size:10px;color:var(--gris-s);}
+.pcr{background:var(--anth);border-radius:12px;padding:13px;margin-bottom:10px;border-left:4px solid #555;}
+.pcr.ven{border-left-color:#9B59B6;}.pcr.sam{border-left-color:var(--rouge-v);}.pcr.dim{border-left-color:var(--or);}.pcr.lun{border-left-color:#1ABC9C;}.pcr.mar{border-left-color:#3498DB;}.pcr.mer{border-left-color:#27AE60;}.pcr.jeu{border-left-color:#E84393;}
+.pt{font-family:'Bebas Neue',sans-serif;font-size:17px;margin-bottom:2px;}
+.ph{font-size:10px;color:var(--gris-s);margin-bottom:8px;}
+.pa{display:flex;align-items:center;gap:8px;font-size:12px;padding:5px 8px;background:var(--noir);border-radius:6px;margin-bottom:4px;}
+.pag{font-size:10px;color:var(--or);}
+.ec{font-size:11px;color:var(--gris-s);font-style:italic;}
+.pf{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.pl{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #444;color:var(--gris);background:transparent;font-family:inherit;}
+.pl.on{background:var(--rouge-v);border-color:var(--rouge-v);color:white;}
+.st{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gris);margin-bottom:10px;}
+.nr{text-align:center;padding:30px 20px;color:var(--gris-s);font-size:13px;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--vert);color:white;padding:11px 22px;border-radius:30px;font-weight:600;font-size:13px;z-index:999;transition:transform 0.3s;}
+.toast.on{transform:translateX(-50%) translateY(0);}
+.atabs{display:flex;gap:8px;margin-bottom:14px;}
+.atab{padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid #444;color:var(--gris);background:transparent;font-family:inherit;}
+.atab.on{border-color:var(--bleu);color:#5DADE2;background:rgba(41,128,185,0.1);}
+.eqs{margin-bottom:16px;}
+.eqh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.eqt{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--or);}
+.agr{display:flex;align-items:center;justify-content:space-between;background:var(--noir);border-radius:8px;padding:9px 12px;margin-bottom:6px;}
+.agri{flex:1;}
+.agrn{font-size:13px;font-weight:600;}
+.agrg{font-size:10px;color:var(--or);margin-top:1px;}
+.agra{display:flex;gap:6px;}
+.mvb{background:rgba(255,255,255,0.1);border:none;color:var(--gris);padding:5px 9px;border-radius:6px;font-size:12px;cursor:pointer;}
+.dlb{background:rgba(231,76,60,0.2);border:none;color:var(--rouge-v);padding:5px 9px;border-radius:6px;font-size:12px;cursor:pointer;}
+.af{background:var(--noir);border-radius:10px;padding:12px;margin-top:8px;display:none;}
+.af input,.af select{margin-bottom:8px;}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cr{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid #333;gap:10px;}
+.cr:last-child{border-bottom:none;}
+.crlb{font-size:13px;font-weight:600;}
+.crsb{font-size:10px;color:var(--gris-s);margin-top:2px;}
+.crv{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--or);letter-spacing:2px;margin-top:4px;}
+.cre{display:none;gap:6px;margin-top:8px;align-items:center;}
+.cre input{margin-bottom:0;width:130px;}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;}
+.modal.on{display:flex;}
+.mbox{background:var(--anth);border-radius:16px;padding:20px;width:88%;max-width:340px;}
+.mt{font-family:'Bebas Neue',sans-serif;font-size:22px;margin-bottom:14px;}
+.spin{text-align:center;padding:30px;color:var(--gris-s);}
+.status-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px;}
+.status-actif{background:rgba(39,174,96,0.2);color:#2ECC71;border:1px solid #27AE60;}
+.status-inapte{background:rgba(231,76,60,0.2);color:#E74C3C;border:1px solid #C0392B;}
+.status-conge{background:rgba(243,156,18,0.2);color:#F39C12;border:1px solid #F39C12;}
+.status-autre{background:rgba(127,140,141,0.2);color:#BDC3C7;border:1px solid #7F8C8D;}
+.tooltip-wrap{position:relative;display:inline-block;}
+.tooltip-box{display:none;position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:#1A1A1A;color:var(--blanc);border:1px solid #444;border-radius:8px;padding:8px 12px;font-size:11px;white-space:nowrap;z-index:50;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,0.4);}
+.tooltip-box::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#444;}
+.tooltip-wrap:hover .tooltip-box,.tooltip-wrap.active .tooltip-box{display:block;}
+.qual-badge{display:inline-block;background:rgba(41,128,185,0.2);color:#5DADE2;border:1px solid #2980B9;border-radius:20px;padding:2px 7px;font-size:10px;margin:2px;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div style="font-size:26px">🚒</div>
+    <div><div class="hdr-t">Astreinte</div><div class="hdr-s">Planification</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button id="themeBtn" onclick="toggleTheme()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 8px;border-radius:20px;font-size:14px;cursor:pointer;line-height:1">🌙</button>
+    <div class="badge" id="badge" onclick="logout()">Agent</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="showTab('agent')" id="t-agent"><span class="ti">👤</span>Mes dispos</div>
+  <div class="tab" onclick="showTab('chef')" id="t-chef"><span class="ti">📋</span>Sélection</div>
+  <div class="tab" onclick="showTab('planning')" id="t-planning"><span class="ti">📅</span>Planning</div>
+  <div class="tab" onclick="showTab('admin')" id="t-admin"><span class="ti">⚙️</span>Admin</div>
+  <div class="tab" onclick="showTab('stats')" id="t-stats"><span class="ti">📊</span>Stats</div>
+  <div class="tab" onclick="showTab('qr')" id="t-qr"><span class="ti">📱</span>QR Code</div>
+</div>
+
+<!-- AGENT -->
+<div class="vw on" id="v-agent">
+  <div class="card">
+    <label class="lbl">Mon équipe</label>
+    <select id="selEq" onchange="onEqChange()" style="margin-bottom:10px">
+      <option value="">-- Sélectionner mon équipe --</option>
+    </select>
+    <label class="lbl" style="margin-top:6px">Je suis</label>
+    <select id="selAg" onchange="onAgChange()"><option value="">-- Sélectionner mon nom --</option></select>
+  </div>
+  <div id="agForm" style="display:none">
+    <div class="card">
+      <label class="lbl">Date de début de la période</label>
+      <input type="date" id="wkDate" style="margin-bottom:10px;color-scheme:dark" onchange="onWkDateChange()">
+      <div id="wkDateLabel" style="font-size:12px;color:var(--or);margin-bottom:4px;display:none"></div>
+      <label class="lbl" style="margin-top:6px">Période</label>
+      <div class="wkg">
+        <button class="wkb on" onclick="selWk('we',this)">Weekend<br><small>Sam+Dim</small></button>
+        <button class="wkb" onclick="selWk('pontVen',this)">Pont Ven.<br><small>Ven+Sam+Dim</small></button>
+        <button class="wkb" onclick="selWk('pontLun',this)">Pont Lun.<br><small>Sam+Dim+Lun</small></button>
+        <button class="wkb" onclick="selWk('long',this)">Long WE<br><small>Ven+Sam+Dim+Lun</small></button>
+        <button class="wkb" onclick="selWk('semaine',this)">Semaine<br><small>Lun→Ven jour+nuit</small></button>
+        <button class="wkb" onclick="selWk('nuitsSem',this)">Nuits sem.<br><small>Lun→Ven 19h-07h</small></button>
+        <button class="wkb" onclick="selWk('joursSem',this)">Journées sem.<br><small>Lun→Ven 07h-19h</small></button>
+        <button class="wkb" onclick="selWk('complete',this)">Semaine complète<br><small>Lun→Dim</small></button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:14px;font-weight:600">Disponible sur cette période</div><div style="font-size:10px;color:var(--gris-s);margin-top:2px">Activation globale</div></div>
+        <label class="tgl"><input type="checkbox" id="globale" checked onchange="onGlobale()"><span class="tgl-s"></span></label>
+      </div>
+    </div>
+    <div class="card">
+      <label class="lbl">Mes créneaux disponibles</label>
+      <div id="crList"></div>
+    </div>
+    <div class="ok" id="okMsg">✅ Disponibilités envoyées !</div>
+    <button class="btn btn-r" onclick="submitDispo()">📤 Envoyer mes disponibilités</button>
+  </div>
+</div>
+
+<!-- CHEF -->
+<div class="vw" id="v-chef">
+  <div id="chefGate">
+    <div class="card">
+      <label class="lbl">Code sélection</label>
+      <input type="password" id="chefPwd" placeholder="Code accès sélection" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')chefLogin()">
+      <button class="btn btn-r" onclick="chefLogin()">🔓 Accéder</button>
+      <div id="chefErr" style="color:#E74C3C;font-size:12px;text-align:center;display:none;margin-top:6px">Code incorrect</div>
+    </div>
+  </div>
+  <div id="chefDash" style="display:none">
+    <div class="card">
+      <label class="lbl">Équipe</label>
+      <select id="chefEq" onchange="renderChef()" style="margin-bottom:10px">
+        <option value="all">Toutes les équipes</option>
+      </select>
+      <label class="lbl">Période</label>
+      <select id="chefWk" onchange="setPeriode(this.value)">
+        <option value="we">Weekend classique</option>
+        <option value="pontVen">Pont Vendredi</option>
+        <option value="pontLun">Pont Lundi</option>
+        <option value="long">Long weekend</option>
+        <option value="semaine">Semaine (lun→ven)</option>
+        <option value="nuitsSem">Nuits de semaine (lun→ven)</option>
+        <option value="joursSem">Journées de semaine (lun→ven)</option>
+        <option value="complete">Semaine complète (lun→dim)</option>
+      </select>
+    </div>
+    <div class="sbar" id="statsBar"></div>
+    <div class="pf">
+      <button class="pl on" onclick="setFilter('tous',this)">Tous</button>
+      <button class="pl" onclick="setFilter('dispos',this)">Disponibles</button>
+    </div>
+    <div class="pf" id="qualFilterBar" style="margin-top:-4px"></div>
+    <div id="rappelBar" style="margin-bottom:12px;display:none"></div>
+    <div class="st">SÉLECTION PAR CRÉNEAU</div>
+    <div id="agCards"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-or" style="margin-bottom:0;flex:1" onclick="exportRecap()">📥 Exporter</button>
+      <button id="lockBtn" class="btn btn-rv" style="margin-bottom:0;flex:1" onclick="toggleLock()">🔒 Verrouiller</button>
+    </div>
+    <button class="btn btn-rv" onclick="resetAll()">🗑 Réinitialiser</button>
+  </div>
+</div>
+
+<!-- PLANNING -->
+<div class="vw" id="v-planning">
+  <div id="planGate">
+    <div class="card">
+      <label class="lbl">Code planning</label>
+      <input type="password" id="planPwd" placeholder="Code accès planning" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')planLogin()">
+      <button class="btn btn-r" onclick="planLogin()">🔓 Voir le planning</button>
+      <div id="planErr" style="color:#E74C3C;font-size:12px;text-align:center;display:none;margin-top:6px">Code incorrect</div>
+    </div>
+  </div>
+  <div id="planContent" style="display:none">
+    <div class="card">
+      <label class="lbl">Équipe</label>
+      <select id="planEq" onchange="renderPlan()" style="margin-bottom:10px">
+        <option value="all">Toutes les équipes</option>
+      </select>
+      <label class="lbl">Période</label>
+      <select id="planWk" onchange="this.dataset.touched=1;renderPlan()">
+        <option value="we">Weekend classique</option>
+        <option value="pontVen">Pont Vendredi</option>
+        <option value="pontLun">Pont Lundi</option>
+        <option value="long">Long weekend</option>
+        <option value="semaine">Semaine (lun→ven)</option>
+        <option value="nuitsSem">Nuits de semaine (lun→ven)</option>
+        <option value="joursSem">Journées de semaine (lun→ven)</option>
+        <option value="complete">Semaine complète (lun→dim)</option>
+      </select>
+    </div>
+    <div class="st">PLANNING FINAL</div>
+    <div id="planGrid"></div>
+    <button class="btn btn-vt" onclick="sharePlan()">📲 Partager le planning</button>
+    <button class="btn btn-or" onclick="exportPlan()">📥 Exporter texte</button>
+    <button class="btn btn-or" onclick="exportPDF()" style="border-color:#E74C3C;color:#E74C3C">📄 Exporter PDF</button>
+  </div>
+</div>
+
+<!-- STATUS MODAL -->
+<div class="modal" id="statusModal">
+  <div class="mbox">
+    <div class="mt">Statut de l'agent</div>
+    <div id="statusAgentName" style="font-weight:600;color:var(--or);margin-bottom:14px"></div>
+    <input type="hidden" id="statusAgentId">
+    <input type="hidden" id="statusAgentEq">
+    <label class="lbl">Statut</label>
+    <select id="statusSelect" style="margin-bottom:12px">
+      <option value="actif">✅ Actif</option>
+      <option value="inapte">🚫 Inapte médical</option>
+      <option value="conge">🏖️ Congé</option>
+      <option value="suspension">⛔ Suspension</option>
+      <option value="autre">⚠️ Autre indisponibilité</option>
+    </select>
+    <label class="lbl">Date de retour prévue (optionnel)</label>
+    <input type="date" id="statusRetour" style="margin-bottom:14px;color-scheme:dark">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-r" style="margin-bottom:0" onclick="saveStatus()">Sauvegarder</button>
+      <button class="btn btn-rv" style="margin-bottom:0" onclick="document.getElementById('statusModal').classList.remove('on')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR CODE -->
+<div class="vw" id="v-qr">
+  <div class="card" style="text-align:center">
+    <label class="lbl">QR Code à afficher à la caserne</label>
+    <div style="font-size:13px;color:var(--gris-s);margin-bottom:16px">Tes agents scannent ce code avec leur téléphone et arrivent directement sur l'appli</div>
+    <div id="qrcode" style="display:flex;justify-content:center;margin-bottom:16px"></div>
+    <div style="font-size:11px;color:var(--gris-s);word-break:break-all;margin-bottom:16px" id="qrUrl"></div>
+    <button class="btn btn-or" onclick="printQR()">🖨️ Imprimer le QR Code</button>
+  </div>
+  <div class="card">
+    <label class="lbl">Affiche à imprimer</label>
+    <div style="font-size:13px;color:var(--gris-s);margin-bottom:12px">Une affiche complète avec le QR code et les instructions pour tes agents</div>
+    <button class="btn btn-vt" onclick="printAffiche()">📄 Générer l'affiche</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="vw" id="v-admin">
+  <div id="adminGate">
+    <div class="card">
+      <label class="lbl">Code Super Admin</label>
+      <input type="password" id="adminPwd" placeholder="Code administrateur" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')adminLogin()">
+      <button class="btn btn-r" onclick="adminLogin()">🔓 Accéder</button>
+      <div id="adminErr" style="color:#E74C3C;font-size:12px;text-align:center;display:none;margin-top:6px">Code incorrect</div>
+    </div>
+  </div>
+  <div id="adminDash" style="display:none">
+    <div class="atabs">
+      <button class="atab on" onclick="admTab('agents',this)">👥 Agents</button>
+      <button class="atab" onclick="admTab('equipes',this)">🏷️ Équipes</button>
+      <button class="atab" onclick="admTab('codes',this)">🔑 Codes</button>
+      <button class="atab" onclick="admTab('historique',this)">📚 Historique</button>
+      <button class="atab" onclick="admTab('params',this)">⚙️ Paramètres</button>
+    </div>
+    <div id="tabAgents"><div id="eqList"></div></div>
+    <div id="tabEquipes" style="display:none">
+      <div class="card">
+        <label class="lbl">Gérer les équipes</label>
+        <div style="font-size:12px;color:var(--gris-s);margin-bottom:12px">Créez, renommez ou supprimez des équipes. Les équipes 1 à 4 sont les équipes de base.</div>
+        <div id="equipeList" style="margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="newEquipeName" placeholder="Nom de la nouvelle équipe (ex: Réserve)" style="margin-bottom:0;flex:1">
+          <button class="btn-sm" style="background:var(--vert);color:white;white-space:nowrap;padding:8px 12px" onclick="addEquipe()">+ Créer</button>
+        </div>
+      </div>
+    </div>
+    <div id="tabCodes" style="display:none">
+      <div class="card"><label class="lbl">Codes d'accès</label><div id="codeList"></div></div>
+    </div>
+    <div id="tabParams" style="display:none">
+      <div class="card">
+        <label class="lbl">Qualifications personnalisées</label>
+        <div id="qualList" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="newQual" placeholder="Nouvelle qualification" style="margin-bottom:0;flex:1">
+          <button class="btn-sm" style="background:var(--vert);color:white;white-space:nowrap" onclick="addQual()">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="card">
+        <label class="lbl">Fonctions principales</label>
+        <div id="fonctionList" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="newFonction" placeholder="Nouvelle fonction" style="margin-bottom:0;flex:1">
+          <button class="btn-sm" style="background:var(--vert);color:white;white-space:nowrap" onclick="addFonction()">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="card">
+        <label class="lbl">Minimum d'agents requis par créneau</label>
+        <div style="font-size:12px;color:var(--gris-s);margin-bottom:12px">Le chef verra une alerte si un créneau est sous ce seuil</div>
+        <div id="minAgentsList"></div>
+      </div>
+    </div>
+    <div id="tabHistorique" style="display:none">
+      <div class="card">
+        <label class="lbl">Sauvegarder la période actuelle</label>
+        <div style="font-size:13px;color:var(--gris-s);margin-bottom:12px">Archive le planning actuel avant de réinitialiser</div>
+        <input type="text" id="histoLabel" placeholder="Ex : Semaine du 2 au 8 novembre" style="margin-bottom:10px">
+        <button class="btn btn-vt" style="margin-bottom:0" onclick="sauvegarderWeekend()">💾 Sauvegarder</button>
+      </div>
+      <div class="sec-title" style="margin-top:4px">PÉRIODES PASSÉES</div>
+      <div id="histoList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="vw" id="v-stats">
+  <div id="statsGate">
+    <div class="card">
+      <label class="lbl">Code accès</label>
+      <input type="password" id="statsPwd" placeholder="Code chef ou admin" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')statsLogin()">
+      <button class="btn btn-r" onclick="statsLogin()">🔓 Voir les statistiques</button>
+      <div id="statsErr" style="color:#E74C3C;font-size:12px;text-align:center;display:none;margin-top:6px">Code incorrect</div>
+    </div>
+  </div>
+  <div id="statsContent" style="display:none">
+    <div class="st">STATISTIQUES DE L'ÉQUIPE</div>
+    <div id="statsGrid"></div>
+    <div class="st" style="margin-top:16px">RAPPELS — N'ONT PAS RÉPONDU</div>
+    <div id="rappelGrid"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="mvModal">
+  <div class="mbox">
+    <div class="mt">Déplacer l'agent</div>
+    <div id="mvNom" style="font-weight:600;color:var(--or);margin-bottom:12px"></div>
+    <label class="lbl">Vers l'équipe</label>
+    <select id="mvTo" style="margin-bottom:12px">
+    </select>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-r" style="margin-bottom:0" onclick="confirmMove()">Déplacer</button>
+      <button class="btn btn-rv" style="margin-bottom:0" onclick="closeModal()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== SUPABASE CONFIG =====
+// Base « Garde & Astreinte — essai » : chaque centre n'accède qu'à ses propres données, grâce à sa clé.
+var SB_URL = "https://ljwcviiukzrwqehpemez.supabase.co";
+var SB_KEY = "sb_publishable_TH_zvuvF6QX8jkdlNIHW2A_qP6G0Biu";
+
+// Clé du centre : lue dans le lien (#c=...), puis mémorisée sur l'appareil
+var CLE = (function(){
+  var m = (location.hash || "").match(/c=([a-f0-9]{20,64})/i);
+  if (m) { try { localStorage.setItem("ga_cle", m[1]); } catch(e){} return m[1]; }
+  try { return localStorage.getItem("ga_cle") || ""; } catch(e) { return ""; }
+})();
+var CENTRE_NOM = "";
+
+function sbRpc(fn, args) {
+  return fetch(SB_URL + "/rest/v1/rpc/" + fn, {
+    method: "POST",
+    headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(args)
+  }).then(function(r) {
+    if (!r.ok) return r.text().then(function(t){ throw new Error(t || ("HTTP " + r.status)); });
+    return r.status === 204 ? null : r.json();
+  });
+}
+
+function sbGet(id) {
+  return sbRpc("ga_get", { p_cle: CLE, p_id: id })
+    .catch(function(e) { console.error("sbGet error:", e); return null; });
+}
+
+function sbSet(id, value) {
+  return sbRpc("ga_set", { p_cle: CLE, p_id: id, p_value: value })
+    .catch(function(e) { console.error("sbSet error:", e); toast("⚠️ Enregistrement impossible — vérifiez la connexion"); });
+}
+
+function centreInconnu(msg) {
+  document.body.innerHTML =
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#1A1A1A;color:#FAFAFA;font-family:system-ui,sans-serif;text-align:center">'+
+    '<div style="max-width:360px"><div style="font-size:48px">🚒</div>'+
+    '<h1 style="font-size:20px;margin:12px 0">Lien incomplet</h1>'+
+    '<p style="color:#BDC3C7;font-size:14px;line-height:1.5">'+msg+'</p></div></div>';
+}
+
+function appliquerNomCentre() {
+  document.title = "Astreinte — " + CENTRE_NOM;
+  var s = document.querySelector(".hdr-s");
+  if (s) s.textContent = CENTRE_NOM;
+}
+
+function loadAll(cb) {
+  Promise.all([sbGet("agents"), sbGet("codes"), sbGet("dispos"), sbGet("selections"), sbGet("params")])
+    .then(function(res) {
+      DB.agents = res[0] || {"1":[],"2":[],"3":[],"4":[]};
+      DB.codes = res[1] || {admin:"admin1234",selection:"chef2024",planning:"planning2024"};
+      DB.dispos = res[2] || {};
+      DB.sel = res[3] || {};
+      DB.params = res[4] || {qualifications: DEFAULT_QUALS.slice(), fonctions: DEFAULT_FONCTIONS.slice()};
+      // Équipes : initialiser depuis les clés de DB.agents si pas encore dans params
+      if (!DB.params.equipes) {
+        DB.params.equipes = Object.keys(DB.agents).map(function(k) {
+          return {id: k, nom: "Équipe " + k};
+        });
+        if (!DB.params.equipes.length) {
+          DB.params.equipes = [{id:"1",nom:"Équipe 1"},{id:"2",nom:"Équipe 2"},{id:"3",nom:"Équipe 3"},{id:"4",nom:"Équipe 4"}];
+        }
+      }
+      // S'assurer que DB.agents a une entrée pour chaque équipe
+      DB.params.equipes.forEach(function(eq) {
+        if (!DB.agents[eq.id]) DB.agents[eq.id] = [];
+      });
+      if (cb) cb();
+    });
+}
+
+// ===== DATA =====
+var DB = { agents:{}, codes:{}, dispos:{}, sel:{} };
+var CUR = { agent:null, wk:"we", eq:"" };
+var STATE = { chef:false, plan:false, admin:false, filter:"tous" };
+var MOVE = { id:null, eq:null };
+
+var CR = {
+  lundi_jour:{l:"Lundi Jour",h:"07h-19h",c:"lun",d:1},
+  lundi_nuit:{l:"Lundi Nuit",h:"19h-07h",c:"lun",d:1},
+  mardi_jour:{l:"Mardi Jour",h:"07h-19h",c:"mar",d:2},
+  mardi_nuit:{l:"Mardi Nuit",h:"19h-07h",c:"mar",d:2},
+  mercredi_jour:{l:"Mercredi Jour",h:"07h-19h",c:"mer",d:3},
+  mercredi_nuit:{l:"Mercredi Nuit",h:"19h-07h",c:"mer",d:3},
+  jeudi_jour:{l:"Jeudi Jour",h:"07h-19h",c:"jeu",d:4},
+  jeudi_nuit:{l:"Jeudi Nuit",h:"19h-07h",c:"jeu",d:4},
+  vendredi_jour:{l:"Vendredi Jour",h:"07h-19h",c:"ven",d:5},
+  vendredi_nuit:{l:"Vendredi Nuit",h:"19h-07h",c:"ven",d:5},
+  samedi_jour:{l:"Samedi Jour",h:"07h-19h",c:"sam",d:6},
+  samedi_nuit:{l:"Samedi Nuit",h:"19h-07h",c:"sam",d:6},
+  dimanche_jour:{l:"Dimanche Jour",h:"07h-19h",c:"dim",d:0},
+  dimanche_nuit:{l:"Dimanche Nuit",h:"19h-07h",c:"dim",d:0}
+};
+var SEM_JOURS = ["lundi","mardi","mercredi","jeudi","vendredi"];
+var TOUS_JOURS = ["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"];
+function crs(jours, parts){ var out=[]; jours.forEach(function(j){ parts.forEach(function(p){ out.push(j+"_"+p); }); }); return out; }
+var WK = {
+  we:["samedi_jour","samedi_nuit","dimanche_jour","dimanche_nuit"],
+  pontVen:["vendredi_jour","vendredi_nuit","samedi_jour","samedi_nuit","dimanche_jour","dimanche_nuit"],
+  pontLun:["samedi_jour","samedi_nuit","dimanche_jour","dimanche_nuit","lundi_jour","lundi_nuit"],
+  long:["vendredi_jour","vendredi_nuit","samedi_jour","samedi_nuit","dimanche_jour","dimanche_nuit","lundi_jour","lundi_nuit"],
+  semaine:crs(SEM_JOURS,["jour","nuit"]),
+  nuitsSem:crs(SEM_JOURS,["nuit"]),
+  joursSem:crs(SEM_JOURS,["jour"]),
+  complete:crs(TOUS_JOURS,["jour","nuit"])
+};
+var WK_ORDER = ["we","pontVen","pontLun","long","semaine","nuitsSem","joursSem","complete"];
+var CLRS = {lun:"#1ABC9C",mar:"#3498DB",mer:"#27AE60",jeu:"#E84393",ven:"#9B59B6",sam:"#E74C3C",dim:"#F39C12"};
+
+// Date réelle d'un créneau à partir de la date de début saisie (AAAA-MM-JJ).
+// La date saisie est ramenée au premier jour de la période (ex. samedi pour un weekend, lundi pour une semaine).
+function crDate(j, wk, startStr){
+  if(!startStr || !WK[wk] || !CR[j]) return null;
+  var first = CR[WK[wk][0]].d;
+  var d = new Date(startStr + "T12:00:00");
+  if(isNaN(d)) return null;
+  while(d.getDay() !== first) d.setDate(d.getDate()-1);
+  d.setDate(d.getDate() + ((CR[j].d - first + 7) % 7));
+  return d;
+}
+function crLbl(j, wk, startStr){
+  var c = CR[j]; var d = crDate(j, wk, startStr);
+  return c.l + (d ? " · " + d.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"}) : "");
+}
+function periodeDate(){
+  var r = "";
+  Object.values(DB.dispos||{}).forEach(function(d){ if(d && d.wkDate && !r) r = d.wkDate; });
+  return r;
+}
+
+// Init
+if (!CLE) {
+  centreInconnu("Ouvrez l'application avec le lien personnel de votre centre, ou scannez le QR code affiché à la caserne.");
+} else sbRpc("ga_centre", { p_cle: CLE }).then(function(nom) {
+  if (!nom) {
+    try { localStorage.removeItem("ga_cle"); } catch(e){}
+    centreInconnu("Ce lien n'est plus valable. Demandez le lien de votre centre à votre chef de centre.");
+    return;
+  }
+  CENTRE_NOM = nom;
+  appliquerNomCentre();
+  loadAll(function() {
+  getParams(function(){});
+  populateEqSelects();
+  toast("Connecté ✅");
+});
+}).catch(function(){ centreInconnu("Connexion impossible pour le moment. Vérifiez votre réseau puis rechargez la page."); });
+
+// Polling pour chef/planning
+var pollT = null;
+function startPoll() {
+  if (pollT) return;
+  pollT = setInterval(function() {
+    loadAll(function() {
+      populateEqSelects();
+      if (STATE.chef) renderChef();
+      if (STATE.plan) renderPlan();
+    });
+  }, 6000);
+}
+
+// ===== ÉQUIPES DYNAMIQUES =====
+function getEquipes() {
+  return (DB.params && DB.params.equipes) || [{id:"1",nom:"Équipe 1"},{id:"2",nom:"Équipe 2"},{id:"3",nom:"Équipe 3"},{id:"4",nom:"Équipe 4"}];
+}
+
+function allEqIds() {
+  return getEquipes().map(function(e){ return e.id; });
+}
+
+function findAgentById(agId) {
+  var found = null;
+  allEqIds().forEach(function(eqId){ (DB.agents[eqId]||[]).forEach(function(a){ if(a.id===agId) found=a; }); });
+  return found;
+}
+
+function populateEqSelects() {
+  var eqs = getEquipes();
+  // Agent select
+  var selEq = document.getElementById("selEq");
+  if (selEq) {
+    var cur = selEq.value;
+    selEq.innerHTML = '<option value="">-- Sélectionner mon équipe --</option>';
+    eqs.forEach(function(eq){ selEq.innerHTML += '<option value="'+eq.id+'"'+(cur===eq.id?' selected':'')+'>'+eq.nom+'</option>'; });
+  }
+  // Chef select
+  var chefEq = document.getElementById("chefEq");
+  if (chefEq) {
+    var cur2 = chefEq.value;
+    chefEq.innerHTML = '<option value="all">Toutes les équipes</option>';
+    eqs.forEach(function(eq){ chefEq.innerHTML += '<option value="'+eq.id+'"'+(cur2===eq.id?' selected':'')+'>'+eq.nom+'</option>'; });
+  }
+  // Plan select
+  var planEq = document.getElementById("planEq");
+  if (planEq) {
+    var cur3 = planEq.value;
+    planEq.innerHTML = '<option value="all">Toutes les équipes</option>';
+    eqs.forEach(function(eq){ planEq.innerHTML += '<option value="'+eq.id+'"'+(cur3===eq.id?' selected':'')+'>'+eq.nom+'</option>'; });
+  }
+  // Move modal select
+  var mvTo = document.getElementById("mvTo");
+  if (mvTo) {
+    mvTo.innerHTML = '';
+    eqs.forEach(function(eq){ mvTo.innerHTML += '<option value="'+eq.id+'">'+eq.nom+'</option>'; });
+  }
+}
+
+function getEqNom(id) {
+  var found = getEquipes().find(function(e){ return e.id === id; });
+  return found ? found.nom : "Équipe "+id;
+}
+
+function showTab(v) {
+  document.querySelectorAll(".vw").forEach(function(e){e.classList.remove("on");});
+  document.querySelectorAll(".tab").forEach(function(e){e.classList.remove("on");});
+  document.getElementById("v-"+v).classList.add("on");
+  document.getElementById("t-"+v).classList.add("on");
+  if ((v==="chef"&&STATE.chef)||(v==="planning"&&STATE.plan)) startPoll();
+  if (v==="qr") initQR();
+}
+
+function logout() {
+  STATE.chef=false; STATE.plan=false; STATE.admin=false;
+  if (pollT) { clearInterval(pollT); pollT=null; }
+  ["chefGate","planGate","adminGate"].forEach(function(id){document.getElementById(id).style.display="";});
+  ["chefDash","planContent","adminDash"].forEach(function(id){document.getElementById(id).style.display="none";});
+  document.getElementById("badge").textContent="Agent";
+  showTab("agent"); toast("Déconnecté");
+}
+
+// ===== AGENT =====
+function onEqChange() {
+  var eq = document.getElementById("selEq").value;
+  CUR.eq = eq;
+  var sel = document.getElementById("selAg");
+  sel.innerHTML = "<option value=''>-- Sélectionner mon nom --</option>";
+  document.getElementById("agForm").style.display = "none";
+  if (!eq) return;
+  (DB.agents[eq]||[]).forEach(function(a) {
+    var o = document.createElement("option");
+    o.value = a.id; o.textContent = a.nom + " — " + a.grade;
+    sel.appendChild(o);
+  });
+}
+
+function onAgChange() {
+  var val = document.getElementById("selAg").value;
+  if (!val) { document.getElementById("agForm").style.display="none"; return; }
+  CUR.agent = (DB.agents[CUR.eq]||[]).find(function(a){return a.id===val;});
+  if (!CUR.agent) return;
+  document.getElementById("agForm").style.display = "block";
+  updateLockUI();
+  var d = DB.dispos[CUR.agent.id];
+  if (!d && DB.params && DB.params.periode && WK[DB.params.periode]) {
+    CUR.wk = DB.params.periode;
+    var wkMap0={}; WK_ORDER.forEach(function(k,i){wkMap0[k]=i;});
+    document.querySelectorAll(".wkb").forEach(function(b){b.classList.remove("on");});
+    document.querySelectorAll(".wkb")[wkMap0[CUR.wk]].classList.add("on");
+  }
+  if (d) {
+    document.getElementById("globale").checked = d.dispoGlobale !== false;
+    CUR.wk = d.wkType || "we";
+    var wkMap={}; WK_ORDER.forEach(function(k,i){wkMap[k]=i;}); if(!(CUR.wk in wkMap)) CUR.wk="we";
+    document.querySelectorAll(".wkb").forEach(function(b){b.classList.remove("on");});
+    document.querySelectorAll(".wkb")[wkMap[CUR.wk]].classList.add("on");
+  }
+  if (CUR.agent) restoreWkDate(CUR.agent.id);
+  renderCr();
+}
+
+function selWk(type, btn) {
+  CUR.wk = type;
+  document.querySelectorAll(".wkb").forEach(function(b){b.classList.remove("on");});
+  btn.classList.add("on");
+  renderCr();
+}
+
+function onGlobale() {
+  var checked = document.getElementById("globale").checked;
+  document.getElementById("crList").style.opacity = checked ? "1" : "0.4";
+  document.querySelectorAll(".ct").forEach(function(t){t.disabled=!checked;});
+}
+
+function renderCr() {
+  var jours = WK[CUR.wk];
+  var saved = (DB.dispos[CUR.agent&&CUR.agent.id]||{}).creneaux||{};
+  var savedH = (DB.dispos[CUR.agent&&CUR.agent.id]||{}).heures||{};
+  var list = document.getElementById("crList");
+  list.innerHTML = "";
+  jours.forEach(function(j) {
+    var c = CR[j];
+    var checked = saved[j] !== false;
+    var parts = c.h.split("-");
+    var defaultStart = parts[0].trim().replace("h",":");
+    var defaultEnd = parts[1].trim().replace("h",":");
+    if(defaultStart.indexOf(":") === 1) defaultStart = "0" + defaultStart;
+    if(defaultEnd.indexOf(":") === 1) defaultEnd = "0" + defaultEnd;
+    if(defaultStart.slice(-1) === ":") defaultStart += "00";
+    if(defaultEnd.slice(-1) === ":") defaultEnd += "00";
+    var savedStart = (savedH[j] && savedH[j].debut) || defaultStart;
+    var savedEnd = (savedH[j] && savedH[j].fin) || defaultEnd;
+    var wrapper = document.createElement("div");
+    wrapper.style.cssText = "border-bottom:1px solid #333;padding-bottom:10px;margin-bottom:2px";
+    var row = document.createElement("div");
+    row.className = "cri";
+    row.style.cssText = "border-bottom:none;padding-bottom:4px";
+    var dayDiv = document.createElement("div");
+    dayDiv.className = "crd " + c.c;
+    dayDiv.textContent = c.l.substring(0,3).toUpperCase();
+    var infoDiv = document.createElement("div");
+    infoDiv.className = "crinf";
+    infoDiv.innerHTML = '<div class="crl">' + crLbl(j, CUR.wk, document.getElementById("wkDate").value) + '</div><div class="crh">' + c.h + '</div>';
+    var tglLabel = document.createElement("label");
+    tglLabel.className = "tgl";
+    var chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.className = "ct";
+    chk.dataset.j = j;
+    if(checked) chk.checked = true;
+    chk.addEventListener("change", function() {
+      var hDiv = document.getElementById("heures_" + this.dataset.j);
+      var rDiv = document.getElementById("rem_" + this.dataset.j);
+      if(hDiv) hDiv.style.display = this.checked ? "flex" : "none";
+      if(rDiv) rDiv.style.display = this.checked ? "flex" : "none";
+    });
+    var tglSpan = document.createElement("span");
+    tglSpan.className = "tgl-s";
+    tglLabel.appendChild(chk);
+    tglLabel.appendChild(tglSpan);
+    row.appendChild(dayDiv);
+    row.appendChild(infoDiv);
+    row.appendChild(tglLabel);
+    wrapper.appendChild(row);
+    var heuresDiv = document.createElement("div");
+    heuresDiv.id = "heures_" + j;
+    heuresDiv.style.cssText = "display:" + (checked ? "flex" : "none") + ";align-items:center;gap:8px;padding:4px 0 2px 58px;flex-wrap:wrap";
+    var deLabel = document.createElement("span");
+    deLabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    deLabel.textContent = "De";
+    var startInput = document.createElement("input");
+    startInput.type = "time";
+    startInput.className = "ch-debut";
+    startInput.dataset.j = j;
+    startInput.value = savedStart;
+    startInput.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;width:90px;font-family:inherit";
+    var aLabel = document.createElement("span");
+    aLabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    aLabel.textContent = "a";
+    var endInput = document.createElement("input");
+    endInput.type = "time";
+    endInput.className = "ch-fin";
+    endInput.dataset.j = j;
+    endInput.value = savedEnd;
+    endInput.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;width:90px;font-family:inherit";
+    heuresDiv.appendChild(deLabel);
+    heuresDiv.appendChild(startInput);
+    heuresDiv.appendChild(aLabel);
+    heuresDiv.appendChild(endInput);
+    // Ligne remplacant
+    var remDiv = document.createElement("div");
+    remDiv.id = "rem_" + j;
+    remDiv.style.cssText = "display:" + (checked ? "flex" : "none") + ";align-items:center;gap:8px;padding:4px 0 6px 58px;flex-wrap:wrap";
+    var remLabel = document.createElement("span");
+    remLabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    remLabel.textContent = "Remplacant :";
+    var remSelect = document.createElement("select");
+    remSelect.className = "ch-rem";
+    remSelect.dataset.j = j;
+    remSelect.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;font-family:inherit;flex:1;max-width:180px";
+    var defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "-- Aucun --";
+    remSelect.appendChild(defaultOpt);
+    var allAgents = [];
+    allEqIds().forEach(function(eq) {
+      (DB.agents[eq]||[]).forEach(function(a) {
+        if(!CUR.agent || a.id !== CUR.agent.id) allAgents.push(a);
+      });
+    });
+    allAgents.forEach(function(a) {
+      var opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = a.nom;
+      if(savedH[j] && savedH[j].remplacant === a.id) opt.selected = true;
+      remSelect.appendChild(opt);
+    });
+    var remDeLabel = document.createElement("span");
+    remDeLabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    remDeLabel.textContent = "de";
+    var remStart = document.createElement("input");
+    remStart.type = "time";
+    remStart.className = "ch-rem-debut";
+    remStart.dataset.j = j;
+    remStart.value = (savedH[j] && savedH[j].remDebut) || "";
+    remStart.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;width:90px;font-family:inherit";
+    var remALabel = document.createElement("span");
+    remALabel.style.cssText = "font-size:11px;color:#7F8C8D";
+    remALabel.textContent = "a";
+    var remEnd = document.createElement("input");
+    remEnd.type = "time";
+    remEnd.className = "ch-rem-fin";
+    remEnd.dataset.j = j;
+    remEnd.value = (savedH[j] && savedH[j].remFin) || "";
+    remEnd.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;width:90px;font-family:inherit";
+    remDiv.appendChild(remLabel);
+    remDiv.appendChild(remSelect);
+    remDiv.appendChild(remDeLabel);
+    remDiv.appendChild(remStart);
+    remDiv.appendChild(remALabel);
+    remDiv.appendChild(remEnd);
+    // Commentaire libre
+    var commentDiv = document.createElement("div");
+    commentDiv.style.cssText = "display:"+(checked?"flex":"none")+";align-items:center;gap:8px;padding:2px 0 8px 58px;";
+    var commentLabel = document.createElement("span");
+    commentLabel.style.cssText = "font-size:11px;color:#7F8C8D;white-space:nowrap";
+    commentLabel.textContent = "Note :";
+    var commentInput = document.createElement("input");
+    commentInput.type = "text";
+    commentInput.className = "ch-comment";
+    commentInput.dataset.j = j;
+    commentInput.placeholder = "Précision optionnelle...";
+    commentInput.value = (savedH[j] && savedH[j].comment) || "";
+    commentInput.style.cssText = "background:#1A1A1A;border:1px solid #555;color:#FAFAFA;padding:4px 8px;border-radius:6px;font-size:12px;font-family:inherit;flex:1;margin-bottom:0";
+    commentDiv.appendChild(commentLabel);
+    commentDiv.appendChild(commentInput);
+    // montrer/cacher le commentaire avec le toggle
+    chk.addEventListener("change", function() {
+      commentDiv.style.display = this.checked ? "flex" : "none";
+    });
+    wrapper.appendChild(heuresDiv);
+    wrapper.appendChild(remDiv);
+    wrapper.appendChild(commentDiv);
+    list.appendChild(wrapper);
+  });
+}
+
+function toggleHeures(j, checked) {
+  var el = document.getElementById("heures_"+j);
+  if(el) el.style.display = checked ? "flex" : "none";
+}
+
+function submitDispo() {
+  if (!CUR.agent) { toast("Sélectionner un agent"); return; }
+  var crs={};
+  document.querySelectorAll(".ct").forEach(function(t){crs[t.dataset.j]=t.checked;});
+  var heures={};
+  document.querySelectorAll(".ch-debut").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].debut=t.value;
+  });
+  document.querySelectorAll(".ch-fin").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].fin=t.value;
+  });
+  document.querySelectorAll(".ch-rem").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].remplacant=t.value;
+  });
+  document.querySelectorAll(".ch-rem-debut").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].remDebut=t.value;
+  });
+  document.querySelectorAll(".ch-rem-fin").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].remFin=t.value;
+  });
+  document.querySelectorAll(".ch-comment").forEach(function(t){
+    if(!heures[t.dataset.j]) heures[t.dataset.j]={};
+    heures[t.dataset.j].comment=t.value;
+  });
+  var wkDateVal = document.getElementById("wkDate").value || "";
+  var data={agentId:CUR.agent.id,nom:CUR.agent.nom,grade:CUR.agent.grade,
+    fonction:CUR.agent.fonction,equipe:CUR.eq,wkDate:wkDateVal,
+    dispoGlobale:document.getElementById("globale").checked,
+    wkType:CUR.wk,creneaux:crs,heures:heures,timestamp:new Date().toISOString()};
+  DB.dispos[CUR.agent.id]=data;
+  sbSet("dispos",DB.dispos).then(function(){
+    var m=document.getElementById("okMsg"); m.style.display="block";
+    setTimeout(function(){m.style.display="none";},3000);
+    toast("Disponibilités envoyées !");
+  });
+}
+
+// ===== CHEF =====
+function chefLogin() {
+  if (document.getElementById("chefPwd").value===DB.codes.selection) {
+    STATE.chef=true;
+    document.getElementById("chefGate").style.display="none";
+    document.getElementById("chefDash").style.display="block";
+    document.getElementById("badge").textContent="Chef";
+    syncPeriodeSelects(); startPoll(); renderChef(); renderQualFilterBar(); updateLockUI();
+  } else { document.getElementById("chefErr").style.display="block"; }
+}
+
+function getAgs(eq) {
+  var eqs = getEquipes();
+  if (eq==="all") {
+    var all=[];
+    eqs.forEach(function(e){(DB.agents[e.id]||[]).forEach(function(a){all.push(Object.assign({},a,{equipe:e.id}));});});
+    return all;
+  }
+  return (DB.agents[eq]||[]).map(function(a){return Object.assign({},a,{equipe:eq});});
+}
+
+function renderChef() {
+  if (!STATE.chef) return;
+  var wk = document.getElementById("chefWk").value;
+  var eq = document.getElementById("chefEq").value;
+  var jours = WK[wk];
+  var ags = getAgs(eq);
+  // Filtre qualification
+  if (STATE_QUAL_FILTER) {
+    ags = ags.filter(function(a){ return a.qualifications && a.qualifications.indexOf(STATE_QUAL_FILTER) > -1; });
+  }
+  var repondu = ags.filter(function(a){ return DB.dispos[a.id]; }).length;
+  var selTotal = 0;
+  ags.forEach(function(a){
+    jours.forEach(function(j){ if((DB.sel[a.id]||{})[j]) selTotal++; });
+  });
+  // Indicateur lock
+  var lockInd = getLocked() ? '<span style="font-size:10px;background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v);padding:2px 8px;border-radius:20px;margin-left:8px">🔒 Verrouillé</span>' : '';
+  // Trouver la date du weekend dans les dispos
+  var wkDateDisp = "";
+  Object.values(DB.dispos).forEach(function(d){ if(d && d.wkDate && !wkDateDisp) wkDateDisp=d.wkDate; });
+  var dateHtml = wkDateDisp ? '<div style="grid-column:1/-1;text-align:center;font-size:11px;color:var(--or);padding:4px 0;border-top:1px solid #333;margin-top:4px">📅 '+new Date(wkDateDisp+'T12:00:00').toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short",year:"numeric"})+'</div>' : '';
+  document.getElementById("statsBar").innerHTML =
+    '<div class="sbox"><div class="snum" style="color:var(--rouge-v)">'+ags.length+'</div><div class="slbl">Agents</div></div>'+
+    '<div class="sbox"><div class="snum" style="color:var(--or)">'+repondu+'</div><div class="slbl">Ont répondu</div></div>'+
+    '<div class="sbox"><div class="snum" style="color:var(--vert-c)">'+selTotal+lockInd+'</div><div class="slbl">Attribués</div></div>'+
+    dateHtml;
+  renderQualFilterBar();
+  updateLockUI();
+
+  // Indicateurs minimum par créneau
+  var mins = (DB.params && DB.params.minAgents) || {};
+  var minBar = "";
+  jours.forEach(function(j){
+    if (!mins[j]) return;
+    var nbSel = ags.filter(function(a){ return (DB.sel[a.id]||{})[j]; }).length;
+    var st = getCreneauStatus(j, nbSel);
+    if (!st) return;
+    var c = CR[j];
+    minBar += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--anth);border-radius:8px;margin-bottom:5px;border-left:3px solid '+CLRS[c.c]+'">'+
+      '<span style="font-size:11px">'+c.l+'</span>'+
+      '<span style="font-size:11px;font-weight:700;color:'+st.color+'">'+st.icon+' '+st.txt+'</span>'+
+      '</div>';
+  });
+  if (minBar) {
+    var minDiv = document.getElementById("agCards").previousSibling;
+    var existing = document.getElementById("minBar");
+    if (existing) existing.remove();
+    var mb = document.createElement("div");
+    mb.id = "minBar"; mb.style.marginBottom="12px";
+    mb.innerHTML = '<div style="font-size:10px;color:var(--gris-s);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Remplissage</div>'+minBar;
+    var agCardsEl = document.getElementById("agCards");
+    agCardsEl.parentNode.insertBefore(mb, agCardsEl);
+  }
+
+  var cont = document.getElementById("agCards");
+  cont.innerHTML = "";
+
+  if (!ags.length) {
+    cont.innerHTML = '<div class="nr">Aucun agent</div>';
+    return;
+  }
+
+  ags.forEach(function(ag) {
+    var d = DB.dispos[ag.id];
+    var agSel = DB.sel[ag.id] || {};
+
+    if (!d) {
+      if (STATE.filter === "dispos") return;
+      var div = document.createElement("div");
+      div.className = "ac nd";
+      div.innerHTML = '<div class="ach"><div><div class="acn">'+ag.nom+'</div><div class="acg">'+ag.grade+'</div></div><span class="db db-n">En attente</span></div>';
+      cont.appendChild(div);
+      return;
+    }
+
+    if (STATE.filter === "dispos" && !d.dispoGlobale) return;
+
+    var disp = jours.filter(function(j){
+      return d.creneaux && d.creneaux[j] === true && d.dispoGlobale;
+    });
+    var nbSel = jours.filter(function(j){ return agSel[j]; }).length;
+    var sc = !d.dispoGlobale ? "db-n" : disp.length === jours.length ? "db-o" : "db-p";
+    var sl = !d.dispoGlobale ? "Indispo" : disp.length === jours.length ? "Dispo" : "Partiel";
+
+    var card = document.createElement("div");
+    card.className = "ac" + (disp.length > 0 ? " hd" : "");
+
+    // Header
+    var hdr = document.createElement("div");
+    hdr.className = "ach";
+    var qualTip="";
+    if(ag.qualifications&&ag.qualifications.length){
+      qualTip='<div class="tooltip-box"><div style="color:var(--or);font-weight:600;margin-bottom:4px">Qualifications</div>'+
+        ag.qualifications.map(function(q){return'<div style="font-size:11px">• '+q+'</div>';}).join("")+
+        '</div>';
+    }
+    hdr.innerHTML =
+      '<div class="tooltip-wrap"><div class="acn">'+ag.nom+qualTip+'</div><div class="acg">'+ag.grade+(eq==="all"?" · "+getEqNom(ag.equipe):"")+'</div></div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
+      '<span class="db '+sc+'">'+sl+'</span>'+
+      (nbSel > 0 ? '<span style="font-size:10px;color:var(--vert-c)">'+nbSel+' attribué'+(nbSel>1?"s":"")+'</span>' : '')+
+      '</div>';
+    card.appendChild(hdr);
+
+    // Créneaux
+    var crdiv = document.createElement("div");
+    jours.forEach(function(j) {
+      var c = CR[j];
+      var isDispo = disp.indexOf(j) > -1;
+      var isSel = !!agSel[j];
+      var agH = (d.heures && d.heures[j]) || {};
+      var heuresStr = agH.debut && agH.fin ? agH.debut + " - " + agH.fin : c.h;
+      var commentStr = agH.comment ? '<div style="font-size:10px;color:#95A5A6;font-style:italic;margin-top:1px">💬 '+agH.comment+'</div>' : '';
+
+      var row = document.createElement("div");
+      row.className = "ccr" + (isSel ? " sel" : "") + (isDispo ? "" : " na");
+
+      // Infos remplacant
+      var remHtml = "";
+      if (agH.remplacant) {
+        var remAg = null;
+        remAg = findAgentById(agH.remplacant);
+        if (remAg) {
+          var remVal = !!(DB.sel[ag.id]||{})[j+"_rem"];
+          var rHstr = agH.remDebut && agH.remFin ? " ("+agH.remDebut+"-"+agH.remFin+")" : "";
+          remHtml = '<div style="font-size:10px;color:#F39C12;margin-top:3px;display:flex;align-items:center;gap:6px">'+
+            "Rempl: "+remAg.nom+rHstr+
+            '<button class="vrem-btn" data-aid="'+ag.id+'" data-j="'+j+'" style="background:'+(remVal?"#27AE60":"#444")+';border:none;color:white;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;font-family:inherit">'+(remVal?"Valide":"Valider")+'</button>'+
+            '</div>';
+        }
+      }
+
+      row.innerHTML =
+        '<div class="ccrl">'+
+        '<div class="ccrd '+c.c+'" style="color:'+CLRS[c.c]+'">'+c.l.substring(0,3).toUpperCase()+'</div>'+
+        '<div><div class="ccri">'+crLbl(j,wk,periodeDate())+'</div><div class="ccrh">'+heuresStr+'</div>'+commentStr+remHtml+'</div>'+
+        '</div>'+
+        '<div>'+(isSel?"✅":isDispo?"⬜":"🚫")+'</div>';
+
+      if (isDispo) {
+        (function(aid, jour){ row.onclick = function(){ toggleCr(aid, jour); }; })(ag.id, j);
+      }
+      crdiv.appendChild(row);
+    });
+    card.appendChild(crdiv);
+    cont.appendChild(card);
+  });
+
+  // Boutons remplacant
+  cont.querySelectorAll(".vrem-btn").forEach(function(btn){
+    btn.addEventListener("click", function(e){
+      e.stopPropagation();
+      validerRem(this.getAttribute("data-aid"), this.getAttribute("data-j"));
+    });
+  });
+}
+
+
+function setPeriode(wk) {
+  if (!DB.params) DB.params = {};
+  DB.params.periode = wk;
+  sbSet("params", DB.params).then(function(){ toast("Période proposée aux agents : " + document.getElementById("chefWk").selectedOptions[0].textContent); });
+  renderChef();
+}
+function syncPeriodeSelects() {
+  var p = DB.params && DB.params.periode;
+  if (!p || !WK[p]) return;
+  ["chefWk","planWk"].forEach(function(id){ var el=document.getElementById(id); if(el && !el.dataset.touched) el.value = p; });
+}
+
+function toggleCr(agId, j) {
+  if (!DB.sel[agId]) DB.sel[agId]={};
+  DB.sel[agId][j]=!DB.sel[agId][j];
+  sbSet("selections",DB.sel).then(function(){
+    toast(DB.sel[agId][j]?"✅ Créneau attribué":"❌ Créneau retiré");
+    renderChef();
+  });
+}
+
+function setFilter(f,btn){
+  STATE.filter=f;
+  document.querySelectorAll(".pl").forEach(function(p){p.classList.remove("on");});
+  btn.classList.add("on"); renderChef();
+}
+
+function resetAll(){
+  if(!confirm("Réinitialiser toutes les dispos et sélections ?")) return;
+  DB.dispos={}; DB.sel={};
+  Promise.all([sbSet("dispos",{}),sbSet("selections",{})]).then(function(){
+    renderChef(); toast("Réinitialisé");
+  });
+}
+
+function exportRecap(){
+  var wk=document.getElementById("chefWk").value;
+  var eq=document.getElementById("chefEq").value;
+  var jours=WK[wk]; var ags=getAgs(eq);
+  var txt="RECAP SELECTION ASTREINTE\n"+"=".repeat(26)+"\n\n";
+  jours.forEach(function(j){
+    var c=CR[j]; txt+=crLbl(j,wk,periodeDate()).toUpperCase()+" ("+c.h+") :\n";
+    ags.forEach(function(a){
+      if(!(DB.sel[a.id]||{})[j]) return;
+      var hA=(DB.dispos[a.id]&&DB.dispos[a.id].heures&&DB.dispos[a.id].heures[j])||{};
+      var hStr=hA.debut&&hA.fin?" ["+hA.debut+"-"+hA.fin+"]":"";
+      txt+="  - "+a.nom+" ("+a.grade+")"+hStr+"\n";
+      if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
+        var remAg=null;
+        remAg = findAgentById(hA.remplacant);
+        if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="    > Remplacant: "+remAg.nom+rStr+"\n";}
+      }
+    });
+    txt+="\n";
+  });
+  showTextExport(txt, "Récap Sélection");
+}
+
+// ===== PLANNING =====
+function planLogin(){
+  if(document.getElementById("planPwd").value===DB.codes.planning){
+    STATE.plan=true;
+    document.getElementById("planGate").style.display="none";
+    document.getElementById("planContent").style.display="block";
+    document.getElementById("badge").textContent="Planning";
+    syncPeriodeSelects(); startPoll(); renderPlan();
+  } else { document.getElementById("planErr").style.display="block"; }
+}
+
+function renderPlan(){
+  if(!STATE.plan) return;
+  var wk=document.getElementById("planWk").value;
+  var eq=document.getElementById("planEq").value;
+  var jours=WK[wk]; var ags=getAgs(eq);
+  var grid=document.getElementById("planGrid"); grid.innerHTML="";
+  jours.forEach(function(j){
+    var c=CR[j]; var att=ags.filter(function(a){return (DB.sel[a.id]||{})[j];});
+    var div=document.createElement("div"); div.className="pcr "+c.c;
+    var html='<div class="pt">'+crLbl(j,wk,periodeDate())+'</div><div class="ph">'+c.h+'</div>';
+    if(att.length>0){att.forEach(function(a){
+      var dA=DB.dispos[a.id]||{};
+      var hA=(dA.heures&&dA.heures[j])||{};
+      var hStr=hA.debut&&hA.fin?'<span style="color:#1ABC9C;font-size:10px;margin-left:6px">'+hA.debut+'-'+hA.fin+'</span>':'';
+      var cStr=hA.comment?'<div style="font-size:10px;color:#95A5A6;font-style:italic">💬 '+hA.comment+'</div>':'';
+      var qTip="";
+      if(a.qualifications&&a.qualifications.length){
+        qTip='<div class="tooltip-box"><div style="color:var(--or);font-weight:600;margin-bottom:4px">Qualifications</div>'+
+          a.qualifications.map(function(q){return'<div style="font-size:11px">• '+q+'</div>';}).join("")+'</div>';
+      }
+      html+='<div class="pa">🧑‍🚒 <div style="flex:1"><div class="tooltip-wrap" style="display:inline">'+a.nom+qTip+hStr+'</div><div class="pag">'+a.grade+'</div>'+cStr+'</div></div>';
+      // Afficher remplacant validé
+      if(hA.remplacant && (DB.sel[a.id]||{})[j+"_rem"]){
+        var remAg=null;
+        remAg = findAgentById(hA.remplacant);
+        if(remAg){
+          var rStr=hA.remDebut&&hA.remFin?'<span style="color:#1ABC9C;font-size:10px;margin-left:6px">'+hA.remDebut+'-'+hA.remFin+'</span>':'';
+          html+='<div class="pa" style="background:rgba(243,156,18,0.08);border-left:2px solid #F39C12">'+
+            '🔄 <div style="flex:1">'+
+            '<div style="display:flex;align-items:center;flex-wrap:wrap">'+remAg.nom+rStr+'</div>'+
+            '<div class="pag" style="color:#F39C12">Remplacant de '+a.nom.split(" ")[0]+'</div>'+
+            '</div></div>';
+        }
+      }
+    });}
+    else{html+='<div class="ec">Aucun agent attribué</div>';}
+    div.innerHTML=html; grid.appendChild(div);
+  });
+}
+
+function sharePlan(){
+  var wk=document.getElementById("planWk").value;
+  var eq=document.getElementById("planEq").value;
+  var jours=WK[wk]; var ags=getAgs(eq);
+  var txt="PLANNING ASTREINTE\n"+"-".repeat(26)+"\n\n";
+  jours.forEach(function(j){
+    var c=CR[j]; var att=ags.filter(function(a){return (DB.sel[a.id]||{})[j];});
+    txt+=crLbl(j,wk,periodeDate())+" ("+c.h+")\n";
+    att.forEach(function(a){
+      var dA=DB.dispos[a.id]||{}; var hA=(dA.heures&&dA.heures[j])||{};
+      var hStr=hA.debut&&hA.fin?" ["+hA.debut+"-"+hA.fin+"]":"";
+      txt+="  - "+a.nom+hStr+"\n";
+      if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
+        var remAg=null;
+        remAg = findAgentById(hA.remplacant);
+        if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="  - "+remAg.nom+rStr+" (remplacant)\n";}
+      }
+    });
+    if(!att.length)txt+="  - (aucun)\n"; txt+="\n";
+  });
+  if(navigator.share){navigator.share({title:"Planning Astreinte",text:txt});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){toast("Planning copié !");});}
+  else{toast("Non disponible sur ce navigateur");}
+}
+
+function exportPlan(){
+  var wk=document.getElementById("planWk").value;
+  var eq=document.getElementById("planEq").value;
+  var jours=WK[wk]; var ags=getAgs(eq);
+  var txt="PLANNING ASTREINTE\n"+"=".repeat(26)+"\n\n";
+  jours.forEach(function(j){
+    var c=CR[j]; var att=ags.filter(function(a){return (DB.sel[a.id]||{})[j];});
+    txt+=crLbl(j,wk,periodeDate()).toUpperCase()+" ("+c.h+") :\n";
+    att.forEach(function(a){
+      var hA=(DB.dispos[a.id]&&DB.dispos[a.id].heures&&DB.dispos[a.id].heures[j])||{};
+      var hStr=hA.debut&&hA.fin?" ["+hA.debut+"-"+hA.fin+"]":"";
+      txt+="  - "+a.nom+" ("+a.grade+")"+hStr+"\n";
+      if(hA.remplacant&&(DB.sel[a.id]||{})[j+"_rem"]){
+        var remAg=null;
+        remAg = findAgentById(hA.remplacant);
+        if(remAg){var rStr=hA.remDebut&&hA.remFin?" ["+hA.remDebut+"-"+hA.remFin+"]":"";txt+="    > Remplacant: "+remAg.nom+rStr+"\n";}
+      }
+    });
+    if(!att.length)txt+="  - (aucun)\n"; txt+="\n";
+  });
+  showTextExport(txt, "Planning Astreinte");
+}
+
+// ===== ADMIN =====
+function adminLogin(){
+  if(document.getElementById("adminPwd").value===DB.codes.admin){
+    STATE.admin=true;
+    document.getElementById("adminGate").style.display="none";
+    document.getElementById("adminDash").style.display="block";
+    document.getElementById("badge").textContent="Admin";
+    renderAdmAgs(); renderAdmCodes();
+  } else { document.getElementById("adminErr").style.display="block"; }
+}
+
+function admTab(tab,btn){
+  document.querySelectorAll(".atab").forEach(function(t){t.classList.remove("on");});
+  btn.classList.add("on");
+  document.getElementById("tabAgents").style.display=tab==="agents"?"":"none";
+  document.getElementById("tabEquipes").style.display=tab==="equipes"?"":"none";
+  document.getElementById("tabCodes").style.display=tab==="codes"?"":"none";
+  document.getElementById("tabHistorique").style.display=tab==="historique"?"":"none";
+  document.getElementById("tabParams").style.display=tab==="params"?"":"none";
+  if(tab==="historique") renderHistorique();
+  if(tab==="params") renderParams();
+  if(tab==="equipes") renderEquipes();
+}
+
+// ===== GESTION ÉQUIPES =====
+function renderEquipes() {
+  var cont = document.getElementById("equipeList");
+  if (!cont) return;
+  var eqs = getEquipes();
+  cont.innerHTML = "";
+  eqs.forEach(function(eq, i) {
+    var nb = (DB.agents[eq.id]||[]).length;
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--noir);border-radius:8px;padding:10px 12px;";
+    row.innerHTML =
+      '<div style="flex:1">'+
+        '<div style="font-size:14px;font-weight:600">'+eq.nom+'</div>'+
+        '<div style="font-size:10px;color:var(--gris-s);margin-top:2px">'+nb+' agent'+(nb>1?'s':'')+'</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px">'+
+        '<button class="bsm" style="background:rgba(243,156,18,0.15);color:var(--or);border:1px solid var(--or)" data-id="'+eq.id+'" data-nom="'+eq.nom+'" onclick="renameEquipe(this.dataset.id,this.dataset.nom)">Renommer</button>'+
+        (nb===0 ?
+          '<button class="bsm" style="background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v)" data-id="'+eq.id+'" onclick="deleteEquipe(this.dataset.id)">Suppr.</button>'
+          : '<span style="font-size:10px;color:var(--gris-s);padding:4px 6px">non vide</span>'
+        )+
+      '</div>';
+    cont.appendChild(row);
+  });
+  if (!eqs.length) cont.innerHTML = '<div style="color:var(--gris-s);font-size:12px;padding:8px 0">Aucune équipe</div>';
+}
+
+function addEquipe() {
+  var nomInput = document.getElementById("newEquipeName");
+  var nom = nomInput.value.trim();
+  if (!nom) { toast("Entrer un nom pour l'équipe"); return; }
+  var eqs = getEquipes();
+  // Vérifier unicité du nom
+  if (eqs.find(function(e){ return e.nom.toLowerCase()===nom.toLowerCase(); })) {
+    toast("Une équipe avec ce nom existe déjà"); return;
+  }
+  var newId = "eq_" + Date.now();
+  eqs.push({id: newId, nom: nom});
+  DB.params.equipes = eqs;
+  DB.agents[newId] = [];
+  Promise.all([sbSet("params", DB.params), sbSet("agents", DB.agents)]).then(function(){
+    nomInput.value = "";
+    populateEqSelects();
+    renderEquipes();
+    renderAdmAgs();
+    toast("Équipe \""+nom+"\" créée !");
+  });
+}
+
+function renameEquipe(id, oldNom) {
+  var newNom = prompt("Nouveau nom pour l'équipe :", oldNom);
+  if (!newNom || newNom.trim() === oldNom) return;
+  newNom = newNom.trim();
+  var eqs = getEquipes();
+  if (eqs.find(function(e){ return e.nom.toLowerCase()===newNom.toLowerCase() && e.id!==id; })) {
+    toast("Une équipe avec ce nom existe déjà"); return;
+  }
+  eqs.forEach(function(e){ if(e.id===id) e.nom=newNom; });
+  DB.params.equipes = eqs;
+  sbSet("params", DB.params).then(function(){
+    populateEqSelects();
+    renderEquipes();
+    renderAdmAgs();
+    toast("Équipe renommée !");
+  });
+}
+
+function deleteEquipe(id) {
+  var nb = (DB.agents[id]||[]).length;
+  if (nb > 0) { toast("Supprimer d'abord les agents de cette équipe"); return; }
+  if (!confirm("Supprimer cette équipe ?")) return;
+  var eqs = getEquipes().filter(function(e){ return e.id!==id; });
+  DB.params.equipes = eqs;
+  delete DB.agents[id];
+  Promise.all([sbSet("params", DB.params), sbSet("agents", DB.agents)]).then(function(){
+    populateEqSelects();
+    renderEquipes();
+    renderAdmAgs();
+    toast("Équipe supprimée");
+  });
+}
+
+function renderAdmAgs() {
+  if(!STATE.admin) return;
+  getParams(function(){ _renderAdmAgs(); });
+}
+
+function _renderAdmAgs() {
+  if(!STATE.admin) return;
+  var cont = document.getElementById("eqList");
+  cont.innerHTML = "";
+  var eqs = getEquipes();
+  eqs.forEach(function(eqObj) {
+    var eq = eqObj.id;
+    var ags = DB.agents[eq] || [];
+    var sec = document.createElement("div"); sec.className = "eqs";
+    var hdr = document.createElement("div"); hdr.className = "eqh";
+    hdr.innerHTML = '<div class="eqt">'+eqObj.nom+'</div><div style="font-size:11px;color:var(--gris-s)">'+ags.length+' agent'+(ags.length>1?"s":"")+'</div>';
+    sec.appendChild(hdr);
+    if(!ags.length){
+      var e=document.createElement("div"); e.style="color:var(--gris-s);font-size:12px;padding:6px 0"; e.textContent="Aucun agent"; sec.appendChild(e);
+    }
+    ags.forEach(function(a) {
+      var row = document.createElement("div"); row.className = "agr"; row.style.flexDirection="column";
+      var quals = a.qualifications && a.qualifications.length ? a.qualifications : [];
+      var qualBadges = quals.length ? '<div style="margin-top:3px">'+quals.map(function(q){return'<span class="qual-badge">'+q+'</span>';}).join("")+'</div>' : '';
+      var statusLbl = getStatusLabel(a.status);
+      var statusCls = getStatusCls(a.status);
+      var statusBadge = '<span class="status-badge '+statusCls+'">'+statusLbl+'</span>';
+      var isInactif = a.status && a.status !== "actif";
+      var mainDiv = document.createElement("div"); mainDiv.style="display:flex;align-items:center;justify-content:space-between;width:100%";
+      if(isInactif) mainDiv.style.opacity="0.6";
+      mainDiv.innerHTML = '<div class="agri"><div class="agrn">'+a.nom+statusBadge+'</div>'+
+        '<div class="agrg">'+a.grade+' - '+a.fonction+(a.dateRetour?' · Retour: '+a.dateRetour:'')+' </div>'+qualBadges+'</div>'+
+        '<div class="agra" style="flex-wrap:wrap;justify-content:flex-end;gap:4px">'+
+        '<button class="mvb" data-id="'+a.id+'" data-eq="'+eq+'" onclick="openStatusModal(this.dataset.id,this.dataset.eq)">Statut</button>'+
+        '<button class="mvb" data-id="'+a.id+'" data-eq="'+eq+'" onclick="openEditAgent(this.dataset.id,this.dataset.eq)">Quals</button>'+
+        '<button class="mvb" data-id="'+a.id+'" data-eq="'+eq+'" data-nom="'+a.nom+'" onclick="openMove(this.dataset.id,this.dataset.eq,this.dataset.nom)">Deplacer</button>'+
+        '<button class="dlb" data-id="'+a.id+'" data-eq="'+eq+'" onclick="delAg(this.dataset.id,this.dataset.eq)">Suppr.</button>'+
+        '</div>';
+      row.appendChild(mainDiv);
+      // Formulaire modification (caché)
+      var editDiv = document.createElement("div"); editDiv.id="edit_"+a.id; editDiv.style="display:none;width:100%;margin-top:10px;background:var(--noir);border-radius:8px;padding:12px";
+      var dynQuals = (DB.params && DB.params.qualifications) ? DB.params.qualifications : DEFAULT_QUALS;
+      var qualChecks = dynQuals.map(function(q){
+        var checked = quals.indexOf(q)>-1 ? "checked" : "";
+        return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;margin:3px 6px 3px 0"><input type="checkbox" class="eq_'+a.id+'" value="'+q+'" '+checked+'> '+q+'</label>';
+      }).join("");
+      editDiv.innerHTML = '<div class="lbl" style="margin-bottom:6px">Qualifications de '+a.nom+'</div>'+
+        '<div style="display:flex;flex-wrap:wrap;margin-bottom:10px">'+qualChecks+'</div>'+
+        '<div style="display:flex;gap:8px">'+
+        '<button class="btn btn-r" style="margin-bottom:0;padding:8px 14px;font-size:12px" data-id="'+a.id+'" data-eq="'+eq+'" onclick="saveAgentQuals(this.dataset.id,this.dataset.eq)">Sauvegarder</button>'+
+        '<button class="btn btn-rv" style="margin-bottom:0;padding:8px 14px;font-size:12px" data-id="'+a.id+'" onclick="closeEditAgent(this.dataset.id)">Annuler</button>'+
+        '</div>';
+      row.appendChild(editDiv);
+      sec.appendChild(row);
+    });
+    // Formulaire ajout
+    var addBtn = document.createElement("button"); addBtn.className="btn btn-bl"; addBtn.style="padding:8px 14px;font-size:12px;margin-top:6px";
+    addBtn.textContent="+ Ajouter un agent";
+    addBtn.onclick = function(){ document.getElementById("af_"+eq).style.display="block"; };
+    sec.appendChild(addBtn);
+    var formDiv = document.createElement("div"); formDiv.className="af"; formDiv.id="af_"+eq;
+    var dynQuals = (DB.params && DB.params.qualifications) ? DB.params.qualifications : DEFAULT_QUALS;
+    var qualChecksNew = dynQuals.map(function(q){
+      return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;margin:3px 6px 3px 0"><input type="checkbox" class="nq nq_new_'+eq+'" value="'+q+'"> '+q+'</label>';
+    }).join("");
+    formDiv.innerHTML = '<label class="lbl" style="margin-bottom:8px">Nouveau membre - '+eqObj.nom+'</label>'+
+      '<input type="text" id="nn_'+eq+'" placeholder="Nom Prénom">'+
+      '<div class="f2">'+
+      '<select id="ng_'+eq+'"><option value="">Grade</option>'+
+      '<option>Lieutenant</option><option>Adjudant Chef</option><option>Adjudant</option>'+
+      '<option>Sergent Chef</option><option>Sergent</option><option>Caporal Chef</option>'+
+      '<option>Caporal</option><option>Sapeur 1ere Cl.</option><option>Sapeur</option></select>'+
+      '<select id="nf_'+eq+'"><option value="">Fonction principale</option>'+
+      ((DB.params&&DB.params.fonctions)?DB.params.fonctions:DEFAULT_FONCTIONS).map(function(f){return'<option>'+f+'</option>';}).join("")+
+      '</select>'+
+      '</div>'+
+      '<div class="lbl" style="margin-top:8px;margin-bottom:6px">Qualifications</div>'+
+      '<div style="display:flex;flex-wrap:wrap;margin-bottom:10px">'+qualChecksNew+'</div>'+
+      '<div style="display:flex;gap:8px;margin-top:4px">'+
+      '<button class="btn btn-r" style="margin-bottom:0" data-eq="'+eq+'" onclick="addAg(this.dataset.eq)">Ajouter</button>'+
+      '<button class="btn btn-rv" style="margin-bottom:0" data-eq="'+eq+'" onclick="closeAddForm(this.dataset.eq)">Annuler</button>'+
+      '</div>';
+    sec.appendChild(formDiv);
+    cont.appendChild(sec);
+  });
+}
+
+function closeAddForm(eq) {
+  var el = document.getElementById("af_"+eq);
+  if(el) el.style.display = "none";
+}
+
+function closeEditAgent(id) {
+  var el = document.getElementById("edit_"+id);
+  if(el) el.style.display = "none";
+}
+
+function openEditAgent(id, eq) {
+  var editDiv = document.getElementById("edit_"+id);
+  if (!editDiv) return;
+  editDiv.style.display = editDiv.style.display === "none" ? "block" : "none";
+}
+
+function saveAgentQuals(id, eq) {
+  var quals = [];
+  document.querySelectorAll(".eq_"+id+":checked").forEach(function(c){ quals.push(c.value); });
+  var agents = JSON.parse(JSON.stringify(DB.agents[eq]||[]));
+  agents.forEach(function(a){ if(a.id===id) a.qualifications=quals; });
+  DB.agents[eq] = agents;
+  sbSet("agents", DB.agents).then(function(){
+    document.getElementById("edit_"+id).style.display="none";
+    renderAdmAgs();
+    toast("Qualifications sauvegardées !");
+  });
+}
+
+
+function addAg(eq){
+  var nom=document.getElementById("nn_"+eq).value.trim();
+  var grade=document.getElementById("ng_"+eq).value;
+  var fn=document.getElementById("nf_"+eq).value;
+  if(!nom||!grade||!fn){toast("Remplir tous les champs");return;}
+  var quals=[];
+  document.querySelectorAll(".nq_new_"+eq+":checked").forEach(function(c){quals.push(c.value);});
+  if(!DB.agents[eq])DB.agents[eq]=[];
+  DB.agents[eq].push({id:"a"+Date.now(),nom:nom,grade:grade,fonction:fn,qualifications:quals});
+  sbSet("agents",DB.agents).then(function(){
+    document.getElementById("nn_"+eq).value="";
+    document.getElementById("af_"+eq).style.display="none";
+    renderAdmAgs(); toast("Agent ajouté !");
+  });
+}
+
+function delAg(id,eq){
+  if(!confirm("Supprimer cet agent ?")) return;
+  DB.agents[eq]=(DB.agents[eq]||[]).filter(function(a){return a.id!==id;});
+  delete DB.dispos[id]; delete DB.sel[id];
+  Promise.all([sbSet("agents",DB.agents),sbSet("dispos",DB.dispos),sbSet("selections",DB.sel)])
+    .then(function(){renderAdmAgs();toast("Agent supprimé");});
+}
+
+function openMove(id,eq,nom){
+  MOVE.id=id; MOVE.eq=eq;
+  document.getElementById("mvNom").textContent=nom;
+  populateEqSelects();
+  var opts=document.getElementById("mvTo");
+  Array.from(opts.options).forEach(function(o){o.disabled=(o.value===eq);});
+  document.getElementById("mvModal").classList.add("on");
+}
+
+function confirmMove(){
+  var toEq=document.getElementById("mvTo").value;
+  if(!toEq||toEq===MOVE.eq){toast("Choisir une autre équipe");return;}
+  var ag=(DB.agents[MOVE.eq]||[]).find(function(a){return a.id===MOVE.id;});
+  if(!ag){closeModal();return;}
+  DB.agents[MOVE.eq]=(DB.agents[MOVE.eq]||[]).filter(function(a){return a.id!==MOVE.id;});
+  if(!DB.agents[toEq])DB.agents[toEq]=[];
+  DB.agents[toEq].push(ag);
+  sbSet("agents",DB.agents).then(function(){renderAdmAgs();toast("Agent déplacé !");});
+  closeModal();
+}
+
+function closeModal(){
+  document.getElementById("mvModal").classList.remove("on");
+  MOVE.id=null; MOVE.eq=null;
+}
+
+function renderAdmCodes(){
+  var items=[
+    {k:"admin",l:"Super Admin",s:"Gestion complète"},
+    {k:"selection",l:"Sélection",s:"Attribuer les créneaux"},
+    {k:"planning",l:"Planning",s:"Voir et partager"}
+  ];
+  var cont=document.getElementById("codeList"); cont.innerHTML="";
+  items.forEach(function(item){
+    var row=document.createElement("div"); row.className="cr";
+    row.innerHTML='<div><div class="crlb">'+item.l+'</div><div class="crsb">'+item.s+'</div>'+
+      '<div class="crv" id="cv_'+item.k+'">'+(DB.codes[item.k]||"--")+'</div>'+
+      '<div class="cre" id="ce_'+item.k+'">'+
+      '<input type="text" id="ci_'+item.k+'" placeholder="Nouveau code" style="width:130px;margin-bottom:0">'+
+      '<button class="bsm" style="background:var(--vert);color:white" onclick="saveCode(\''+item.k+'\')">OK</button>'+
+      '<button class="bsm" style="background:#444;color:white" onclick="cancelCode(\''+item.k+'\')">X</button>'+
+      '</div></div>'+
+      '<button class="bsm" style="background:rgba(243,156,18,0.15);color:var(--or);border:1px solid var(--or)" onclick="editCode(\''+item.k+'\')">Modifier</button>';
+    cont.appendChild(row);
+  });
+}
+
+function editCode(k){document.getElementById("ce_"+k).style.display="flex";document.getElementById("ci_"+k).value=DB.codes[k]||"";}
+function cancelCode(k){document.getElementById("ce_"+k).style.display="none";}
+function saveCode(k){
+  var val=document.getElementById("ci_"+k).value.trim();
+  if(!val||val.length<4){toast("Min. 4 caractères");return;}
+  DB.codes[k]=val;
+  sbSet("codes",DB.codes).then(function(){
+    document.getElementById("cv_"+k).textContent=val;
+    cancelCode(k); toast("Code mis à jour !");
+  });
+}
+
+// ===== PDF EXPORT =====
+function exportPDF(){
+  var wk=document.getElementById("planWk").value;
+  var eq=document.getElementById("planEq").value;
+  var jours=WK[wk]; var ags=getAgs(eq);
+  var dateStr=new Date().toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  var eqStr=eq==="all"?"Toutes les équipes":"Équipe "+eq;
+
+  // Couleurs par créneau
+  var CLR={lun:"#148F77",mar:"#2471A3",mer:"#1E8449",jeu:"#C2185B",ven:"#7D3C98",sam:"#C0392B",dim:"#D68910"};
+  var BGCLR={lun:"#E8F8F5",mar:"#EAF2F8",mer:"#E9F7EF",jeu:"#FCE4EC",ven:"#F5EEF8",sam:"#FDEDEC",dim:"#FEF9E7"};
+
+  var crHtml="";
+  jours.forEach(function(j){
+    var c=CR[j]; var att=ags.filter(function(a){return (DB.sel[a.id]||{})[j];});
+    var cls=c.c; var color=CLR[cls]; var bg=BGCLR[cls];
+    crHtml+='<div style="margin-bottom:14px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.1)">'+
+      '<div style="background:'+color+';padding:10px 16px;display:flex;justify-content:space-between;align-items:center">'+
+      '<div style="color:white;font-weight:700;font-size:15px">'+crLbl(j,wk,periodeDate())+'</div>'+
+      '<div style="color:rgba(255,255,255,0.85);font-size:12px;background:rgba(0,0,0,0.2);padding:3px 10px;border-radius:20px">'+c.h+'</div>'+
+      '</div>'+
+      '<div style="background:'+bg+';padding:10px 16px">';
+    if(att.length>0){
+      att.forEach(function(a){
+        var agH=(DB.dispos[a.id]&&DB.dispos[a.id].heures&&DB.dispos[a.id].heures[j])||{};
+        var initiales=a.nom.split(" ").map(function(n){return n[0];}).join("").substring(0,2).toUpperCase();
+        var dA = DB.dispos[a.id] || {};
+        var hA = (dA.heures && dA.heures[j]) || {};
+        var hStr = hA.debut && hA.fin ? hA.debut + " - " + hA.fin : c.h;
+        crHtml+='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.06)">'+
+          '<div style="width:32px;height:32px;border-radius:50%;background:'+color+';color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">'+initiales+'</div>'+
+          '<div style="flex:1">'+
+          '<div style="font-size:13px;font-weight:600;color:#1a1a1a;display:flex;align-items:center;gap:8px">'+a.nom+
+          '<span style="font-size:11px;font-weight:400;color:'+color+';background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:10px">'+hStr+'</span></div>'+
+          '<div style="font-size:11px;color:#666">'+a.grade+' — '+a.fonction+'</div>'+
+          '</div></div>';
+        // Remplacant dans PDF
+        if (hA.remplacant && (DB.sel[a.id]||{})[j+"_rem"]) {
+          var remAg = null;
+          remAg = findAgentById(hA.remplacant);
+          if (remAg) {
+            var rStr = hA.remDebut && hA.remFin ? hA.remDebut + " - " + hA.remFin : "";
+            var remInit = remAg.nom.split(" ").map(function(n){return n[0];}).join("").substring(0,2).toUpperCase();
+            crHtml+='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.06);background:rgba(243,156,18,0.05)">'+
+              '<div style="width:32px;height:32px;border-radius:50%;background:#F39C12;color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">'+remInit+'</div>'+
+              '<div style="flex:1">'+
+              '<div style="font-size:13px;font-weight:600;color:#1a1a1a;display:flex;align-items:center;gap:8px">'+remAg.nom+
+              (rStr?'<span style="font-size:11px;font-weight:400;color:#F39C12;background:rgba(243,156,18,0.1);padding:2px 6px;border-radius:10px">'+rStr+'</span>':'')+
+              '</div>'+
+              '<div style="font-size:11px;color:#F39C12">Remplacant de '+a.nom.split(" ")[0]+'</div>'+
+              '</div></div>';
+          }
+        }
+      });
+    } else {
+      crHtml+='<div style="color:#999;font-style:italic;font-size:12px;padding:6px 0">Aucun agent attribué</div>';
+    }
+    crHtml+='</div></div>';
+  });
+
+  var totalAg=ags.length;
+  var repAg=ags.filter(function(a){return DB.dispos[a.id];}).length;
+  var selAg=ags.filter(function(a){return jours.some(function(j){return (DB.sel[a.id]||{})[j];});}).length;
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+    '<style>*{box-sizing:border-box;margin:0;padding:0;}'+
+    'body{font-family:"Helvetica Neue",Arial,sans-serif;color:#1a1a1a;background:white;}'+
+    '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}'+
+    '.no-print{display:none;}'+
+    'body{padding:0;}}</style>'+
+    '</head><body>'+
+
+    // Header
+    '<div style="background:linear-gradient(135deg,#96281B 0%,#C0392B 100%);padding:24px 28px;display:flex;align-items:center;gap:20px">'+
+    '<div style="width:60px;height:60px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px">🚒</div>'+
+    '<div>'+
+    '<div style="color:white;font-size:22px;font-weight:700;letter-spacing:1px">'+CENTRE_NOM.toUpperCase()+'</div>'+
+    '<div style="color:rgba(255,255,255,0.8);font-size:13px;margin-top:2px">Planning d’astreinte</div>'+
+    '</div></div>'+
+
+    // Info bar
+    '<div style="background:#2C2C2C;padding:12px 28px;display:flex;justify-content:space-between;align-items:center">'+
+    '<div style="color:#BDC3C7;font-size:12px">📅 '+dateStr+'</div>'+
+    '<div style="color:#F39C12;font-size:12px;font-weight:600">'+eqStr+'</div>'+
+    '</div>'+
+
+    // Stats rapides
+    '<div style="display:flex;border-bottom:2px solid #eee">'+
+    '<div style="flex:1;padding:14px 20px;text-align:center;border-right:1px solid #eee">'+
+    '<div style="font-size:24px;font-weight:700;color:#C0392B">'+totalAg+'</div>'+
+    '<div style="font-size:11px;color:#777;margin-top:2px">Agents</div></div>'+
+    '<div style="flex:1;padding:14px 20px;text-align:center;border-right:1px solid #eee">'+
+    '<div style="font-size:24px;font-weight:700;color:#F39C12">'+repAg+'</div>'+
+    '<div style="font-size:11px;color:#777;margin-top:2px">Ont répondu</div></div>'+
+    '<div style="flex:1;padding:14px 20px;text-align:center">'+
+    '<div style="font-size:24px;font-weight:700;color:#27AE60">'+selAg+'</div>'+
+    '<div style="font-size:11px;color:#777;margin-top:2px">Sélectionnés</div></div>'+
+    '</div>'+
+
+    // Créneaux
+    '<div style="padding:20px 28px">'+
+    '<div style="font-size:13px;font-weight:700;color:#7F8C8D;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">Répartition des créneaux</div>'+
+    crHtml+
+    '</div>'+
+
+    // Footer
+    '<div style="background:#f5f5f5;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;border-top:2px solid #ddd">'+
+    '<div style="font-size:10px;color:#999">Document généré automatiquement — Application Astreinte</div>'+
+    '<div style="font-size:10px;color:#999">'+CENTRE_NOM+' © '+new Date().getFullYear()+'</div>'+
+    '</div>'+
+
+    // Bouton impression
+    '<div class="no-print" style="text-align:center;padding:20px">'+
+    '<button onclick="window.print()" style="background:#C0392B;color:white;border:none;padding:12px 30px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / Enregistrer en PDF</button>'+
+    '</div>'+
+
+    '</body></html>';
+
+  var w=window.open("","_blank");
+  if(w){w.document.write(html);w.document.close();}
+  else{toast("Autoriser les pop-ups pour l'export PDF");}
+}
+
+// ===== STATS =====
+function statsLogin(){
+  var pwd=document.getElementById("statsPwd").value;
+  if(pwd===DB.codes.selection||pwd===DB.codes.admin||pwd===DB.codes.planning){
+    document.getElementById("statsGate").style.display="none";
+    document.getElementById("statsContent").style.display="block";
+    renderStats();
+    renderCompteurInStats();
+  } else { document.getElementById("statsErr").style.display="block"; }
+}
+
+function renderStats(){
+  var allAgs=getAgs("all");
+  var grid=document.getElementById("statsGrid");
+  grid.innerHTML="";
+  
+  // Stats globales
+  var total=allAgs.length;
+  var repondu=allAgs.filter(function(a){return DB.dispos[a.id];}).length;
+  var pct=total>0?Math.round(repondu/total*100):0;
+  grid.innerHTML+='<div class="card" style="margin-bottom:14px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
+    '<div style="font-size:13px;font-weight:600">Taux de réponse global</div>'+
+    '<div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:var(--vert-c)">'+pct+'%</div></div>'+
+    '<div style="background:#1A1A1A;border-radius:20px;height:8px;overflow:hidden">'+
+    '<div style="background:var(--vert);height:100%;width:'+pct+'%;border-radius:20px;transition:width 0.5s"></div></div>'+
+    '</div>';
+
+  // Stats par agent
+  var agStats='<div class="card"><label class="lbl">Détail par agent</label>';
+  allEqIds().forEach(function(eq){
+    var ags=DB.agents[eq]||[];
+    if(!ags.length) return;
+    agStats+='<div style="font-family:Bebas Neue,sans-serif;font-size:16px;color:var(--or);margin:10px 0 6px">'+getEqNom(eq)+'</div>';
+    ags.forEach(function(a){
+      var d=DB.dispos[a.id];
+      var hasRepondu=!!d;
+      var nbSel=0;
+      Object.values(DB.sel[a.id]||{}).forEach(function(v){if(v)nbSel++;});
+      agStats+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333">'+
+        '<div><div style="font-size:13px;font-weight:600">'+a.nom+'</div>'+
+        '<div style="font-size:10px;color:var(--gris-s)">'+a.grade+'</div></div>'+
+        '<div style="display:flex;gap:8px;align-items:center">'+
+        '<span style="font-size:10px;padding:3px 8px;border-radius:20px;'+
+        (hasRepondu?'background:rgba(39,174,96,0.2);color:#2ECC71;border:1px solid #27AE60':'background:rgba(192,57,43,0.2);color:#E59866;border:1px solid #C0392B')+
+        ';">'+(hasRepondu?'A répondu':'En attente')+'</span>'+
+        (nbSel>0?'<span style="font-size:10px;color:var(--vert-c)">'+nbSel+' créneau'+(nbSel>1?"x":"")+'</span>':'')+
+        '</div></div>';
+    });
+  });
+  agStats+='</div>';
+  grid.innerHTML+=agStats;
+
+  // Rappels
+  var rappelGrid=document.getElementById("rappelGrid");
+  rappelGrid.innerHTML="";
+  var nonRepondu=allAgs.filter(function(a){return !DB.dispos[a.id];});
+  if(!nonRepondu.length){
+    rappelGrid.innerHTML='<div class="card" style="text-align:center;color:var(--vert-c)">✅ Tout le monde a répondu !</div>';
+  } else {
+    var html='<div class="card">';
+    nonRepondu.forEach(function(a){
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333">'+
+        '<div><div style="font-size:13px;font-weight:600">'+a.nom+'</div>'+
+        '<div style="font-size:10px;color:var(--gris-s)">'+a.grade+' — Équipe '+a.equipe+'</div></div>'+
+        '<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(192,57,43,0.2);color:#E59866;border:1px solid #C0392B">En attente</span>'+
+        '</div>';
+    });
+    html+='</div>';
+    rappelGrid.innerHTML=html;
+  }
+}
+
+function validerRem(agentId, j) {
+  if(!DB.sel[agentId]) DB.sel[agentId]={};
+  DB.sel[agentId][j+"_rem"] = !DB.sel[agentId][j+"_rem"];
+  sbSet("selections", DB.sel).then(function(){
+    toast(DB.sel[agentId][j+"_rem"] ? "✅ Remplacant validé" : "❌ Validation retirée");
+    renderChef();
+  });
+}
+
+// ===== QR CODE =====
+var APP_URL = window.location.href.split("#")[0] + "#c=" + CLE;
+
+function initQR() {
+  var qrDiv = document.getElementById("qrcode");
+  var urlDiv = document.getElementById("qrUrl");
+  if (!qrDiv) return;
+  urlDiv.textContent = APP_URL;
+  // Use Google Charts QR API
+  var img = document.createElement("img");
+  img.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(APP_URL);
+  img.style.cssText = "width:200px;height:200px;border-radius:12px;";
+  img.alt = "QR Code";
+  qrDiv.innerHTML = "";
+  qrDiv.appendChild(img);
+}
+
+function printQR() {
+  var w = window.open("","_blank");
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{text-align:center;font-family:Arial;padding:40px;} h2{color:#C0392B;} p{color:#666;font-size:14px;margin:10px 0;} img{border:3px solid #C0392B;border-radius:12px;padding:10px;} .url{font-size:11px;color:#999;word-break:break-all;max-width:300px;margin:auto;}</style></head><body>'+
+    '<h2>🚒 ASTREINTE</h2>'+
+    '<p>Scanne ce QR code pour indiquer tes disponibilités</p>'+
+    '<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data='+encodeURIComponent(APP_URL)+'" width="250" height="250">'+
+    '<p class="url">'+APP_URL+'</p>'+
+    '<button onclick="window.print()" style="margin-top:20px;background:#C0392B;color:white;border:none;padding:10px 24px;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimer</button>'+
+    '</body></html>');
+  w.document.close();
+}
+
+function printAffiche() {
+  var w = window.open("","_blank");
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'+
+    '*{box-sizing:border-box;margin:0;padding:0;}'+
+    'body{font-family:"Helvetica Neue",Arial,sans-serif;background:white;}'+
+    '.header{background:linear-gradient(135deg,#96281B,#C0392B);padding:30px;text-align:center;color:white;}'+
+    '.logo{font-size:60px;margin-bottom:10px;}'+
+    'h1{font-size:28px;font-weight:700;letter-spacing:2px;}'+
+    'h2{font-size:16px;font-weight:400;opacity:0.85;margin-top:4px;}'+
+    '.content{padding:30px;text-align:center;}'+
+    '.qr-box{background:#f5f5f5;border-radius:16px;padding:24px;display:inline-block;margin:20px 0;}'+
+    'h3{font-size:20px;color:#C0392B;margin-bottom:16px;}'+
+    '.steps{text-align:left;max-width:320px;margin:0 auto 20px;}'+
+    '.step{display:flex;align-items:center;gap:12px;margin-bottom:12px;font-size:14px;}'+
+    '.num{background:#C0392B;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}'+
+    '.url{font-size:11px;color:#999;word-break:break-all;margin-top:10px;}'+
+    '.footer{background:#2C2C2C;padding:16px;text-align:center;color:#BDC3C7;font-size:12px;}'+
+    '@media print{button{display:none;}}'+
+    '</style></head><body>'+
+    '<div class="header"><div class="logo">🚒</div><h1>'+CENTRE_NOM.toUpperCase()+'</h1><h2>Planning des astreintes</h2></div>'+
+    '<div class="content">'+
+    '<h3>Indique tes disponibilités en 30 secondes !</h3>'+
+    '<div class="steps">'+
+    '<div class="step"><div class="num">1</div><div>Scanne le QR code avec ton téléphone</div></div>'+
+    '<div class="step"><div class="num">2</div><div>Sélectionne ton nom et ton équipe</div></div>'+
+    '<div class="step"><div class="num">3</div><div>Coche tes créneaux disponibles</div></div>'+
+    '<div class="step"><div class="num">4</div><div>Appuie sur Envoyer</div></div>'+
+    '</div>'+
+    '<div class="qr-box">'+
+    '<img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(APP_URL)+'" width="220" height="220" style="display:block;">'+
+    '<div class="url">'+APP_URL+'</div>'+
+    '</div>'+
+    '</div>'+
+    '<div class="footer">'+CENTRE_NOM+' — Garde &amp; Astreinte</div>'+
+    '<div style="text-align:center;padding:16px"><button onclick="window.print()" style="background:#C0392B;color:white;border:none;padding:12px 30px;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimer</button></div>'+
+    '</body></html>');
+  w.document.close();
+}
+
+// ===== HISTORIQUE =====
+function sauvegarderWeekend() {
+  var label = document.getElementById("histoLabel").value.trim();
+  if (!label) { toast("Donne un nom à cette période"); return; }
+  var wk = document.getElementById("chefWk") ? document.getElementById("chefWk").value : "we";
+  var snapshot = {
+    label: label,
+    date: new Date().toLocaleDateString("fr-FR"),
+    wkType: wk,
+    dispos: JSON.parse(JSON.stringify(DB.dispos)),
+    selections: JSON.parse(JSON.stringify(DB.sel)),
+    agents: JSON.parse(JSON.stringify(DB.agents)),
+    timestamp: new Date().toISOString()
+  };
+  sbGet("historique").then(function(histo) {
+    var h = histo || [];
+    h.unshift(snapshot);
+    if (h.length > 20) h = h.slice(0, 20); // max 20 weekends
+    sbSet("historique", h).then(function() {
+      document.getElementById("histoLabel").value = "";
+      renderHistorique();
+      toast("Période sauvegardée !");
+    });
+  });
+}
+
+function renderHistorique() {
+  var cont = document.getElementById("histoList");
+  if (!cont) return;
+  sbGet("historique").then(function(histo) {
+    if (!histo || !histo.length) {
+      cont.innerHTML = '<div class="card" style="text-align:center;color:var(--gris-s)">Aucune période sauvegardée</div>';
+      return;
+    }
+    cont.innerHTML = "";
+    histo.forEach(function(h, idx) {
+      var allAgs = [];
+      allEqIds().forEach(function(eq){ Object.values(h.agents[eq]||[]).forEach(function(a){ allAgs.push(a); }); });
+      var selCount = 0;
+      allAgs.forEach(function(a){ Object.values(h.selections[a.id]||{}).forEach(function(v){ if(v) selCount++; }); });
+      var card = document.createElement("div");
+      card.className = "card";
+      card.style.marginBottom = "10px";
+      card.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'+
+        '<div><div style="font-weight:600;font-size:14px">'+h.label+'</div>'+
+        '<div style="font-size:11px;color:var(--gris-s);margin-top:2px">'+h.date+' — '+selCount+' créneaux attribués</div></div>'+
+        '<button class="bsm" style="background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v)" onclick="voirHistorique('+idx+')">Voir</button>'+
+        '</div>'+
+        '<div id="histo_detail_'+idx+'" style="display:none"></div>';
+      cont.appendChild(card);
+    });
+    cont._histo = histo;
+  });
+}
+
+function voirHistorique(idx) {
+  var cont = document.getElementById("histoList");
+  var histo = cont._histo;
+  if (!histo) return;
+  var h = histo[idx];
+  var detail = document.getElementById("histo_detail_"+idx);
+  if (detail.style.display !== "none") { detail.style.display = "none"; return; }
+  var jours = WK[h.wkType||"we"];
+  var allAgs = [];
+  allEqIds().forEach(function(eq){ (h.agents[eq]||[]).forEach(function(a){ allAgs.push(Object.assign({},a,{equipe:eq})); }); });
+  var html = "";
+  jours.forEach(function(j) {
+    var c = CR[j];
+    var att = allAgs.filter(function(a){ return (h.selections[a.id]||{})[j]; });
+    html += '<div style="margin-bottom:8px;border-left:3px solid '+CLRS[c.c]+';padding-left:8px">'+
+      '<div style="font-size:12px;font-weight:600;color:'+CLRS[c.c]+'">'+c.l+' ('+c.h+')</div>'+
+      (att.length > 0 ? att.map(function(a){ return '<div style="font-size:11px;color:var(--gris)">• '+a.nom+'</div>'; }).join("") : '<div style="font-size:11px;color:var(--gris-s);font-style:italic">Aucun agent</div>')+
+      '</div>';
+  });
+  detail.innerHTML = html || '<div style="color:var(--gris-s);font-size:12px">Aucune donnée</div>';
+  detail.style.display = "block";
+}
+
+// ===== COMPTEUR ASTREINTES =====
+function renderCompteurInStats() {
+  sbGet("historique").then(function(histo) {
+    if (!histo || !histo.length) return;
+    var compteur = {};
+    var allAgs = [];
+    allEqIds().forEach(function(eq){ (DB.agents[eq]||[]).forEach(function(a){ allAgs.push(Object.assign({},a,{equipe:eq})); }); });
+    allAgs.forEach(function(a){ compteur[a.id] = {agent:a, count:0}; });
+    histo.forEach(function(h){
+      allAgs.forEach(function(a){
+        var hasSel = Object.values(h.selections[a.id]||{}).some(function(v){ return v; });
+        if (hasSel) { if(compteur[a.id]) compteur[a.id].count++; }
+      });
+    });
+    var sorted = Object.values(compteur).sort(function(a,b){ return b.count-a.count; });
+    var grid = document.getElementById("statsGrid");
+    if (!grid) return;
+    var html = '<div class="card" style="margin-top:14px"><label class="lbl">Compteur astreintes ('+histo.length+' périodes archivées)</label>';
+    sorted.forEach(function(item){
+      var pct = histo.length > 0 ? Math.round(item.count/histo.length*100) : 0;
+      var color = pct >= 75 ? "var(--rouge-v)" : pct >= 50 ? "var(--or)" : "var(--vert-c)";
+      html += '<div style="margin-bottom:10px">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
+        '<div><div style="font-size:13px;font-weight:600">'+item.agent.nom+'</div>'+
+        '<div style="font-size:10px;color:var(--gris-s)">Éq.'+item.agent.equipe+' — '+item.agent.grade+'</div></div>'+
+        '<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:'+color+'">'+item.count+'</div>'+
+        '</div>'+
+        '<div style="background:#1A1A1A;border-radius:20px;height:6px;overflow:hidden">'+
+        '<div style="background:'+color+';height:100%;width:'+pct+'%;border-radius:20px"></div>'+
+        '</div></div>';
+    });
+    html += '</div>';
+    grid.innerHTML += html;
+  });
+}
+
+// ===== PARAMÈTRES =====
+var DEFAULT_QUALS = ["PL","VSAV","Chef agres","Chef garde","Prompt secours","Secouriste","FDF","GRIMP","NRBC"];
+var DEFAULT_FONCTIONS = ["Chef de garde","Chef agres VSAV","Conducteur VSAV","Equipier","Autre"];
+
+function getParams(cb) {
+  if (DB.params) { if(cb) cb(DB.params); return; }
+  sbGet("params").then(function(p) {
+    if (!p) {
+      var def = {qualifications: DEFAULT_QUALS.slice(), fonctions: DEFAULT_FONCTIONS.slice()};
+      sbSet("params", def).then(function(){ DB.params = def; if(cb) cb(def); });
+    } else { DB.params = p; if(cb) cb(p); }
+  });
+}
+
+function renderParams() {
+  getParams(function(p) {
+    // Qualifications
+    var qList = document.getElementById("qualList");
+    if(qList) {
+      qList.innerHTML = "";
+      (p.qualifications||[]).forEach(function(q, i) {
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:6px";
+        row.innerHTML = '<span class="qual-badge" style="flex:1">'+q+'</span>'+
+          '<button class="btn-sm" style="background:rgba(243,156,18,0.15);color:var(--or);border:1px solid var(--or)" data-i="'+i+'" data-q="'+q+'" onclick="editQual(parseInt(this.dataset.i),this.dataset.q)">Modifier</button>'+
+          '<button class="btn-sm" style="background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v)" data-i="'+i+'" onclick="delQual(parseInt(this.dataset.i))">Suppr.</button>';
+        qList.appendChild(row);
+      });
+    }
+    // Fonctions
+    var fList = document.getElementById("fonctionList");
+    if(fList) {
+      fList.innerHTML = "";
+      (p.fonctions||[]).forEach(function(f, i) {
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:6px";
+        row.innerHTML = '<span style="flex:1;font-size:13px;font-weight:500">'+f+'</span>'+
+          '<button class="btn-sm" style="background:rgba(243,156,18,0.15);color:var(--or);border:1px solid var(--or)" data-i="'+i+'" data-f="'+f+'" onclick="editFonction(parseInt(this.dataset.i),this.dataset.f)">Modifier</button>'+
+          '<button class="btn-sm" style="background:rgba(231,76,60,0.2);color:var(--rouge-v);border:1px solid var(--rouge-v)" data-i="'+i+'" onclick="delFonction(parseInt(this.dataset.i))">Suppr.</button>';
+        fList.appendChild(row);
+      });
+    }
+    renderMinAgents();
+  });
+}
+
+function addQual() {
+  var val = document.getElementById("newQual").value.trim();
+  if(!val) { toast("Entrer une qualification"); return; }
+  var p = DB.params || {qualifications:DEFAULT_QUALS.slice(),fonctions:DEFAULT_FONCTIONS.slice()};
+  if(!p.qualifications) p.qualifications = DEFAULT_QUALS.slice();
+  p.qualifications.push(val);
+  sbSet("params", p).then(function(){ DB.params=p; document.getElementById("newQual").value=""; renderParams(); toast("Qualification ajoutée !"); });
+}
+
+function editQual(i, oldVal) {
+  var newVal = prompt("Modifier la qualification :", oldVal);
+  if(!newVal || newVal === oldVal) return;
+  var p = DB.params;
+  p.qualifications[i] = newVal.trim();
+  sbSet("params", p).then(function(){ DB.params=p; renderParams(); toast("Qualification modifiée !"); });
+}
+
+function delQual(i) {
+  if(!confirm("Supprimer cette qualification ?")) return;
+  var p = DB.params;
+  p.qualifications.splice(i, 1);
+  sbSet("params", p).then(function(){ DB.params=p; renderParams(); toast("Qualification supprimée"); });
+}
+
+function addFonction() {
+  var val = document.getElementById("newFonction").value.trim();
+  if(!val) { toast("Entrer une fonction"); return; }
+  var p = DB.params || {qualifications:DEFAULT_QUALS.slice(),fonctions:DEFAULT_FONCTIONS.slice()};
+  if(!p.fonctions) p.fonctions = DEFAULT_FONCTIONS.slice();
+  p.fonctions.push(val);
+  sbSet("params", p).then(function(){ DB.params=p; document.getElementById("newFonction").value=""; renderParams(); toast("Fonction ajoutée !"); });
+}
+
+function editFonction(i, oldVal) {
+  var newVal = prompt("Modifier la fonction :", oldVal);
+  if(!newVal || newVal === oldVal) return;
+  var p = DB.params;
+  p.fonctions[i] = newVal.trim();
+  sbSet("params", p).then(function(){ DB.params=p; renderParams(); toast("Fonction modifiée !"); });
+}
+
+function delFonction(i) {
+  if(!confirm("Supprimer cette fonction ?")) return;
+  var p = DB.params;
+  p.fonctions.splice(i, 1);
+  sbSet("params", p).then(function(){ DB.params=p; renderParams(); toast("Fonction supprimée"); });
+}
+
+// ===== STATUT AGENT =====
+function getStatusLabel(status) {
+  var labels = {actif:"Actif",inapte:"Inapte médical",conge:"Congé",suspension:"Suspension",autre:"Indisponible"};
+  return labels[status||"actif"] || "Actif";
+}
+
+function getStatusCls(status) {
+  var cls = {actif:"status-actif",inapte:"status-inapte",conge:"status-conge",suspension:"status-inapte",autre:"status-autre"};
+  return cls[status||"actif"] || "status-actif";
+}
+
+function openStatusModal(agentId, eq) {
+  var ag = null;
+  (DB.agents[eq]||[]).forEach(function(a){ if(a.id===agentId) ag=a; });
+  if(!ag) return;
+  var cur = ag.status || "actif";
+  var modal = document.getElementById("statusModal");
+  document.getElementById("statusAgentName").textContent = ag.nom;
+  document.getElementById("statusAgentId").value = agentId;
+  document.getElementById("statusAgentEq").value = eq;
+  document.getElementById("statusSelect").value = cur;
+  document.getElementById("statusRetour").value = ag.dateRetour || "";
+  modal.classList.add("on");
+}
+
+function saveStatus() {
+  var agentId = document.getElementById("statusAgentId").value;
+  var eq = document.getElementById("statusAgentEq").value;
+  var status = document.getElementById("statusSelect").value;
+  var dateRetour = document.getElementById("statusRetour").value;
+  var agents = JSON.parse(JSON.stringify(DB.agents[eq]||[]));
+  agents.forEach(function(a){ if(a.id===agentId){ a.status=status; a.dateRetour=dateRetour; } });
+  DB.agents[eq] = agents;
+  sbSet("agents", DB.agents).then(function(){
+    document.getElementById("statusModal").classList.remove("on");
+    renderAdmAgs();
+    toast("Statut mis à jour !");
+  });
+}
+
+// ===== EXPORT TEXTE (compatible Safari) =====
+function showTextExport(txt, title) {
+  // Compatible Safari - affichage dans la page
+  var overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:#1A1A1A;z-index:9999;display:flex;flex-direction:column;padding:0;";
+  var toolbar = document.createElement("div");
+  toolbar.style.cssText = "display:flex;gap:8px;padding:12px;background:#2C2C2C;border-bottom:2px solid #444;flex-shrink:0;";
+  toolbar.innerHTML = '<span style="color:#FAFAFA;font-weight:600;flex:1;font-size:14px">'+title+'</span>';
+  var copyBtn = document.createElement("button");
+  copyBtn.textContent = "Copier";
+  copyBtn.style.cssText = "background:#27AE60;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;";
+  copyBtn.onclick = function(){
+    ta.select();
+    document.execCommand("copy");
+    toast("Copié !");
+  };
+  var closeBtn = document.createElement("button");
+  closeBtn.textContent = "Fermer";
+  closeBtn.style.cssText = "background:#C0392B;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;";
+  closeBtn.onclick = function(){ document.body.removeChild(overlay); };
+  toolbar.appendChild(copyBtn);
+  toolbar.appendChild(closeBtn);
+  var ta = document.createElement("textarea");
+  ta.value = txt;
+  ta.style.cssText = "flex:1;background:#1A1A1A;color:#FAFAFA;border:none;padding:16px;font-family:monospace;font-size:12px;resize:none;outline:none;";
+  ta.readOnly = true;
+  overlay.appendChild(toolbar);
+  overlay.appendChild(ta);
+  document.body.appendChild(overlay);
+  ta.focus();
+  ta.select();
+}
+
+// Touch support pour tooltips mobile
+document.addEventListener("click", function(e){
+  var wrap = e.target.closest(".tooltip-wrap");
+  document.querySelectorAll(".tooltip-wrap.active").forEach(function(el){
+    if(el !== wrap) el.classList.remove("active");
+  });
+  if(wrap) wrap.classList.toggle("active");
+});
+
+function toast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("on");
+  setTimeout(function(){t.classList.remove("on");},2500);
+}
+
+// ===== THÈME CLAIR/SOMBRE =====
+var THEME = localStorage.getItem("theme") || "dark";
+function applyTheme() {
+  document.body.classList.toggle("light", THEME === "light");
+  var btn = document.getElementById("themeBtn");
+  if (btn) btn.textContent = THEME === "light" ? "🌙" : "☀️";
+}
+function toggleTheme() {
+  THEME = THEME === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", THEME);
+  applyTheme();
+}
+applyTheme();
+
+// ===== DATE DU WEEKEND =====
+function onWkDateChange() {
+  var d = document.getElementById("wkDate").value;
+  var lbl = document.getElementById("wkDateLabel");
+  if (!d) { lbl.style.display="none"; return; }
+  var dt = new Date(d + "T12:00:00");
+  var options = {weekday:"long", day:"numeric", month:"long", year:"numeric"};
+  lbl.textContent = "📅 " + dt.toLocaleDateString("fr-FR", options);
+  lbl.style.display = "block";
+  if (CUR.agent) renderCr();
+}
+
+// Restaurer la date sauvegardée quand l'agent charge ses dispos
+function restoreWkDate(agentId) {
+  var d = DB.dispos[agentId];
+  var inp = document.getElementById("wkDate");
+  if (d && d.wkDate && inp) {
+    inp.value = d.wkDate;
+    onWkDateChange();
+  }
+}
+
+// ===== VERROUILLAGE PLANNING =====
+function getLocked() { return !!(DB.params && DB.params.locked); }
+
+function toggleLock() {
+  if (!STATE.chef) return;
+  var locked = getLocked();
+  if (!locked) {
+    if (!confirm("Verrouiller le planning ? Les agents ne pourront plus modifier leurs disponibilités.")) return;
+  } else {
+    if (!confirm("Déverrouiller le planning ?")) return;
+  }
+  DB.params.locked = !locked;
+  sbSet("params", DB.params).then(function(){
+    updateLockUI();
+    toast(DB.params.locked ? "🔒 Planning verrouillé" : "🔓 Planning déverrouillé");
+  });
+}
+
+function updateLockUI() {
+  var locked = getLocked();
+  var btn = document.getElementById("lockBtn");
+  if (btn) {
+    btn.textContent = locked ? "🔓 Déverrouiller" : "🔒 Verrouiller";
+    btn.style.borderColor = locked ? "var(--vert)" : "var(--rouge-v)";
+    btn.style.color = locked ? "var(--vert-c)" : "var(--rouge-v)";
+  }
+  // Bannière verrouillage dans vue agent
+  var agForm = document.getElementById("agForm");
+  var existBanner = document.getElementById("lockBanner");
+  if (locked && agForm && !existBanner) {
+    var banner = document.createElement("div");
+    banner.id = "lockBanner";
+    banner.style.cssText = "background:rgba(231,76,60,0.15);border:1px solid var(--rouge-v);border-radius:10px;padding:12px;text-align:center;color:var(--rouge-v);font-weight:600;margin-bottom:12px;font-size:13px";
+    banner.textContent = "🔒 Le planning est verrouillé. Les modifications ne sont plus acceptées.";
+    agForm.insertBefore(banner, agForm.firstChild);
+  } else if (!locked && existBanner) {
+    existBanner.remove();
+  }
+  // Désactiver le bouton envoyer si verrouillé
+  var sendBtn = document.querySelector(".btn-r[onclick='submitDispo()']");
+  if (sendBtn) {
+    sendBtn.disabled = locked;
+    sendBtn.style.opacity = locked ? "0.4" : "1";
+  }
+}
+
+// ===== FILTRE PAR QUALIFICATION =====
+var STATE_QUAL_FILTER = "";
+
+function renderQualFilterBar() {
+  var bar = document.getElementById("qualFilterBar");
+  if (!bar) return;
+  var quals = (DB.params && DB.params.qualifications) || [];
+  bar.innerHTML = '';
+  if (!quals.length) return;
+  var allBtn = document.createElement("button");
+  allBtn.className = "pl" + (!STATE_QUAL_FILTER ? " on" : "");
+  allBtn.style.borderColor = !STATE_QUAL_FILTER ? "" : "#2980B9";
+  allBtn.textContent = "Toutes quals";
+  allBtn.onclick = function(){ STATE_QUAL_FILTER=""; renderQualFilterBar(); renderChef(); };
+  bar.appendChild(allBtn);
+  quals.forEach(function(q){
+    var btn = document.createElement("button");
+    btn.className = "pl" + (STATE_QUAL_FILTER===q ? " on" : "");
+    btn.style.borderColor = STATE_QUAL_FILTER===q ? "" : "#2980B9";
+    btn.style.color = STATE_QUAL_FILTER===q ? "" : "#5DADE2";
+    btn.textContent = q;
+    btn.onclick = function(){ STATE_QUAL_FILTER = STATE_QUAL_FILTER===q ? "" : q; renderQualFilterBar(); renderChef(); };
+    bar.appendChild(btn);
+  });
+}
+
+// ===== MINIMUM D'AGENTS PAR CRÉNEAU =====
+function renderMinAgents() {
+  var cont = document.getElementById("minAgentsList");
+  if (!cont) return;
+  var mins = (DB.params && DB.params.minAgents) || {};
+  cont.innerHTML = "";
+  Object.keys(CR).forEach(function(j){
+    var c = CR[j];
+    var val = mins[j] || 0;
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333";
+    var lbl = document.createElement("div");
+    lbl.style.cssText = "font-size:12px;font-weight:500;color:"+CLRS[c.c];
+    lbl.textContent = c.l;
+    var ctrl = document.createElement("div");
+    ctrl.style.cssText = "display:flex;align-items:center;gap:8px";
+    var btnM = document.createElement("button");
+    btnM.textContent = "−";
+    btnM.style.cssText = "background:#444;border:none;color:white;width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px";
+    btnM.setAttribute("data-j", j);
+    btnM.onclick = function(){ adjustMin(this.getAttribute("data-j"), -1); };
+    var span = document.createElement("span");
+    span.id = "min_"+j;
+    span.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--or);min-width:24px;text-align:center";
+    span.textContent = val;
+    var btnP = document.createElement("button");
+    btnP.textContent = "+";
+    btnP.style.cssText = "background:#444;border:none;color:white;width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px";
+    btnP.setAttribute("data-j", j);
+    btnP.onclick = function(){ adjustMin(this.getAttribute("data-j"), 1); };
+    ctrl.appendChild(btnM); ctrl.appendChild(span); ctrl.appendChild(btnP);
+    row.appendChild(lbl); row.appendChild(ctrl);
+    cont.appendChild(row);
+  });
+}
+
+
+function adjustMin(j, delta) {
+  if (!DB.params.minAgents) DB.params.minAgents = {};
+  var cur = DB.params.minAgents[j] || 0;
+  var nv = Math.max(0, cur + delta);
+  DB.params.minAgents[j] = nv;
+  sbSet("params", DB.params).then(function(){
+    var el = document.getElementById("min_"+j);
+    if (el) el.textContent = nv;
+    toast("Min. mis à jour");
+  });
+}
+
+// Indicateur de remplissage par créneau
+function getCreneauStatus(j, nbSel) {
+  var min = (DB.params && DB.params.minAgents && DB.params.minAgents[j]) || 0;
+  if (min === 0) return null;
+  if (nbSel >= min) return {color:"var(--vert-c)", icon:"✅", txt: nbSel+"/"+min};
+  if (nbSel >= Math.ceil(min * 0.6)) return {color:"var(--or)", icon:"⚠️", txt: nbSel+"/"+min};
+  return {color:"var(--rouge-v)", icon:"🔴", txt: nbSel+"/"+min};
+}
+</script>
+</body>
+</html>
